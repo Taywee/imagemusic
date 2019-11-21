@@ -1,0 +1,1 @@
+# Use rustfmt on code you commit.  You could even add it as a pre-commit hook.
