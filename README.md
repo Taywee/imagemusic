@@ -1,11 +1,25 @@
 # asciimusic
 
-Experiments in encoding music in ascii.  Might have some sort of leading data to indicate tempo, note fade out, simultaneous voices (and maybe their corresponding volumes), number of characters per note, bottom pitch frequency, and division of the note (ie. a packed representation might have 5 bits for pitch and 3 for length).  Maybe even some bits for instrument selection.
+Experiments in encoding music in ascii.  Might have some sort of leading data to
+indicate tempo, note fade out, simultaneous voices (and maybe their
+corresponding volumes), number of characters per note, bottom pitch frequency,
+and division of the note (ie. a packed representation might have 5 bits for
+pitch and 3 for length).  Maybe even some bits for instrument selection.
 
-Maybe integrate with SDL or something so that it can play music on its own.  Maybe use a proper gui toolkit so that musical phrases can directly be loaded in and other people can use it.  (perhaps making it a web-related project could be doable.  This would probably have to be webassembly, because I'd prefer to do the bulk in Rust).
+Maybe integrate with SDL or something so that it can play music on its own.
+Maybe use a proper gui toolkit so that musical phrases can directly be loaded in
+and other people can use it.  (perhaps making it a web-related project could be
+doable.  This would probably have to be webassembly, because I'd prefer to do
+the bulk in Rust).
 
-Keep in mind for the following values that these bits will not be 8 bits per input bytes.  If the input bytes are base-64, each character only gives 6 bits.  With base32, input characters only give 5 bits.
-Base32 is clearer and easier to work with, but base64 will give 5.25 octaves for a single character instead of just 2.58.  2.5 octaves is barely the cello's own pitch range without thumb position.  5.25 is enough to go from the bottom of the cello's pitch to way above the Violin's natural pitch.
+Keep in mind for the following values that these bits will not be 8 bits per
+input bytes.  If the input bytes are base-64, each character only gives 6 bits.
+With base32, input characters only give 5 bits.
+
+Base32 is clearer and easier to work with, but base64 will give 5.25 octaves for
+a single character instead of just 2.58.  2.5 octaves is barely the cello's own
+pitch range without thumb position.  5.25 is enough to go from the bottom of the
+cello's pitch to way above the Violin's natural pitch.
 
 ## Note Range
 
@@ -22,7 +36,9 @@ Bits per note (0 will be a rest, so the total is always reduced by 1):
 
 ## Tone length
 
-Assuming a base of 16th notes. Finest subdivision is 16th notes here.  Triplets of the higher note is possible by taking it down to sixths with the tempo.  Three sixths make a half, two make a third.
+Assuming a base of 16th notes. Finest subdivision is 16th notes here.  Triplets
+of the higher note is possible by taking it down to sixths with the tempo.
+Three sixths make a half, two make a third.
 
 bits per length: longest encodable note.  (0 will not be possible)
 
@@ -42,6 +58,16 @@ bits per length: longest encodable note.  (0 will not be possible)
 
 # Formats to consider for polyphony
 
-A reasonable setup is base64 input.  Initial blocks set up tempo and other such things, including how many voices, and what instrument each voice gets.  Then the beats come in.  Each instrument that needs a beat (its previous note or rest has finished) will, in order, expect to pull a beat.  Voices are not specified inline, they just pull the next applicable note at the right time.  At the beginning, all the beginning notes will be each for one of the voices.  If one voice had a longer note than the others, it will take longer for it to need its own note.
+A reasonable setup is base64 input.  Initial blocks set up tempo and other such
+things, including how many voices, and what instrument each voice gets.  Then
+the beats come in.  Each instrument that needs a beat (its previous note or rest
+has finished) will, in order, expect to pull a beat.  Voices are not specified
+inline, they just pull the next applicable note at the right time.  At the
+beginning, all the beginning notes will be each for one of the voices.  If one
+voice had a longer note than the others, it will take longer for it to need its
+own note.
 
-Another reasonable setup is base32 input, with each voice needing its own base tempo, allowing each voice to have an individually reasonable 2.5 octave range.  Somebody could have two voices with the same instruments to fake having a higher range, but that would involve long-resting the instrument at all other times.
+Another reasonable setup is base32 input, with each voice needing its own base
+tempo, allowing each voice to have an individually reasonable 2.5 octave range.
+Somebody could have two voices with the same instruments to fake having a higher
+range, but that would involve long-resting the instrument at all other times.
