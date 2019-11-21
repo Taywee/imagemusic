@@ -68,6 +68,9 @@ voice had a longer note than the others, it will take longer for it to need its
 own note.
 
 Another reasonable setup is base32 input, with each voice needing its own base
-tempo, allowing each voice to have an individually reasonable 2.5 octave range.
-Somebody could have two voices with the same instruments to fake having a higher
-range, but that would involve long-resting the instrument at all other times.
+frequency, allowing each voice to have an individually reasonable 2.5 octave
+range.  Somebody could have two voices with the same instruments to fake having
+a higher range, but that would involve long-resting the instrument at all other
+times (which isn't a big deal.  For base32 with one character for note and one
+character for length and a base of 16th notes, that's one rest every two
+measures).
