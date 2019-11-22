@@ -6,7 +6,8 @@ use std::io;
 
 fn main() {
     let song = Song {
-        bps: 7.6666667,
+        // quarter notes per minute -> quarter notes per second -> sixteeth notes per second
+        bps: 115.0 / 60.0 * 4.0,
         // Scientific pitch Eb4
         base_frequency: 311.1275,
         notes: vec![
