@@ -1,4 +1,7 @@
-// Each voice will maintain its own ramp for consistency of transition between notes
+// Each voice will maintain its own ramp for consistency of transition between notes.  Might make
+// the sampling a trait, and extend the traits by other traits, like trait Sampler, trait Sawtooth:
+// Sampler, but then I'll have to use dynamic typing everywhere.  I can also just make an
+// "instrument" structure, and a voice will have an instrument and notes
 pub struct Note {
     pub pitch: u8,
     pub length: u8,
@@ -24,7 +27,7 @@ impl Song {
         let multiplier = 2.0f64.powf(1.0 / 12.0);
 
         for note in &self.notes {
-            // Sample loop
+            // Sample loop, sawtooth
             for _ in 0..((note.length as u32 + 1) * (seconds_per_beat as f64 * sample_rate) as u32) {
                 output.push(
                     if note.pitch == 0 {
