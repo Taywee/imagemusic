@@ -1,3 +1,4 @@
+// Each voice will maintain its own ramp for consistency of transition between notes
 pub struct Note {
     pub pitch: u8,
     pub length: u8,
@@ -27,6 +28,7 @@ impl Song {
             for _ in 0..((note.length as u32 + 1) * (seconds_per_beat as f64 * sample_rate) as u32) {
                 output.push(
                     if note.pitch == 0 {
+                        ramp = 0.0;
                         0.0
                     }
                     else {
