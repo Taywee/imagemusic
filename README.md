@@ -34,6 +34,11 @@ Bits per note (0 will be a rest, so the total is always reduced by 1):
 * 7: 127 semitones; 10.58 octave (10 octaves, 7 semitones)
 * 8: 255 semitones; 21.25 octaves (21 octaves, 3 semitones)
 
+Alternately, it might be a good idea to make it a signed representation and
+calculate all notes relative to the previous one, with the "base frequency" just
+being the starting frequency.  This would half the jump distance (so a 5-bit
+representation would only be able to jump up 15 semitones and down 16).
+
 ## Tone length
 
 Assuming a base of 16th notes. Finest subdivision is 16th notes here.  Triplets
