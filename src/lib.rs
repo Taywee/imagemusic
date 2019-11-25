@@ -139,6 +139,45 @@ pub struct Song {
     pub sample_rate: f64,
 }
 
+pub struct SongIterator<'a> {
+    pub voice_iterators: Vec<VoiceIterator<'a>>,
+    pub volume_modifier: f64,
+}
+
+impl<'a> Iterator for SongIterator<'a> {
+    type Item = f64;
+
+    fn next(&mut self) -> Option<f64> {
+        if self.voice_iterators.is_empty() {
+            return None;
+        }
+
+        let mut sample = 0.0;
+        let mut removals = Vec::with_capacity(self.voice_iterators.len());
+        for (i, voice_iterator) in self.voice_iterators.iter_mut().enumerate() {
+            if let Some(voice) = voice_iterator.next() {
+                sample += voice;
+            } else {
+                removals.push(i);
+            }
+        }
+
+        for removal in removals.into_iter().rev() {
+            self.voice_iterators.remove(removal);
+        }
+
+        sample *= self.volume_modifier;
+
+        if sample > 1.0 {
+            Some(1.0)
+        } else if sample < -1.0 {
+            Some(-1.0)
+        } else {
+            Some(sample)
+        }
+    }
+}
+
 impl Song {
     pub fn voice_iterators(&mut self) -> Vec<VoiceIterator> {
         self.voices.iter()
@@ -161,40 +200,12 @@ impl Song {
         .collect()
     }
 
-    /** Render the given song into 48KHz 64-bit floating point PCM.
-    */
-    pub fn render(&mut self) -> Vec<f64> {
-        let mut voice_iterators = self.voice_iterators();
+    pub fn iter(&mut self) -> SongIterator {
+        let voice_iterators = self.voice_iterators();
         let volume_modifier = 1.0 / (voice_iterators.len() as f64);
-        let mut output = Vec::new();
-        loop {
-            let mut sample = 0.0;
-            let mut removals = Vec::with_capacity(voice_iterators.len());
-            for (i, voice_iterator) in voice_iterators.iter_mut().enumerate() {
-                if let Some(voice) = voice_iterator.next() {
-                    sample += voice;
-                } else {
-                    removals.push(i);
-                }
-            }
-
-            for removal in removals.into_iter().rev() {
-                voice_iterators.remove(removal);
-            }
-
-            sample *= volume_modifier;
-
-            if sample > 1.0 {
-                sample = 1.0;
-            } else if sample < -1.0 {
-                sample = -1.0;
-            }
-
-            if voice_iterators.is_empty() {
-                return output;
-            } else {
-                output.push(sample);
-            }
+        SongIterator{
+            voice_iterators,
+            volume_modifier,
         }
     }
 }
