@@ -22,6 +22,8 @@ pub trait Instrument {
 
 pub struct Sawtooth;
 pub struct Sine;
+pub struct Square;
+pub struct Triangle;
 
 impl Instrument for Sawtooth {
     fn sample(&self, ramp: f64) -> f64 {
@@ -35,12 +37,30 @@ impl Instrument for Sine {
     }
 }
 
+impl Instrument for Square {
+    fn sample(&self, ramp: f64) -> f64 {
+        if ramp >= 0.5 {
+            1.0
+        } else {
+            -1.0
+        }
+    }
+}
+
+impl Instrument for Triangle {
+    fn sample(&self, ramp: f64) -> f64 {
+        (((ramp - 0.25).abs() - 0.5).abs() - 0.25) * 4.0
+    }
+}
+
 pub struct Note {
     pub pitch: i8,
     pub length: u8,
 }
 
 pub struct Voice {
+    pub volume: f64,
+    pub start_frequency: f64,
     pub instrument: Box<dyn Instrument>,
     pub notes: Vec<Note>,
 }
@@ -59,6 +79,7 @@ pub struct VoiceIterator<'a> {
     sample_rate: f64,
     frequency: f64,
     ramp: f64,
+    volume: f64,
 }
 
 impl<'a> Iterator for VoiceIterator<'a> {
@@ -107,38 +128,73 @@ impl<'a> Iterator for VoiceIterator<'a> {
             while self.ramp >= self.sample_rate {
                 self.ramp -= self.sample_rate;
             }
-            Some(self.instrument.borrow().sample(self.ramp / self.sample_rate))
+            Some(self.instrument.borrow().sample(self.ramp / self.sample_rate) * self.volume)
         }
     }
 }
 
 pub struct Song {
     pub bps: f64,
-    pub base_frequency: f64,
-    pub voice: Voice,
+    pub voices: Vec<Voice>,
     pub sample_rate: f64,
 }
 
 impl Song {
-    pub fn voice_iterator(&mut self) -> VoiceIterator {
-        VoiceIterator {
-            instrument: self.voice.instrument.borrow(),
-            note_iterator: Box::new(self.voice.notes.iter()),
-            current_note: None,
-            note_samples: 0,
-            note_current_sample: 0,
-            done: false,
-            resting: false,
-            seconds_per_beat: 1.0 / self.bps,
-            sample_rate: self.sample_rate,
-            frequency: self.base_frequency,
-            ramp: 0.0,
-        }
+    pub fn voice_iterators(&mut self) -> Vec<VoiceIterator> {
+        self.voices.iter()
+            .map(|voice| {
+                VoiceIterator {
+                    instrument: voice.instrument.borrow(),
+                    note_iterator: Box::new(voice.notes.iter()),
+                    current_note: None,
+                    note_samples: 0,
+                    note_current_sample: 0,
+                    done: false,
+                    resting: false,
+                    seconds_per_beat: 1.0 / self.bps,
+                    sample_rate: self.sample_rate,
+                    frequency: voice.start_frequency,
+                    ramp: 0.0,
+                    volume: voice.volume,
+                }
+            })
+        .collect()
     }
 
     /** Render the given song into 48KHz 64-bit floating point PCM.
     */
     pub fn render(&mut self) -> Vec<f64> {
-        self.voice_iterator().collect()
+        let mut voice_iterators = self.voice_iterators();
+        let volume_modifier = 1.0 / (voice_iterators.len() as f64);
+        let mut output = Vec::new();
+        loop {
+            let mut sample = 0.0;
+            let mut removals = Vec::with_capacity(voice_iterators.len());
+            for (i, voice_iterator) in voice_iterators.iter_mut().enumerate() {
+                if let Some(voice) = voice_iterator.next() {
+                    sample += voice;
+                } else {
+                    removals.push(i);
+                }
+            }
+
+            for removal in removals.into_iter().rev() {
+                voice_iterators.remove(removal);
+            }
+
+            sample *= volume_modifier;
+
+            if sample > 1.0 {
+                sample = 1.0;
+            } else if sample < -1.0 {
+                sample = -1.0;
+            }
+
+            if voice_iterators.is_empty() {
+                return output;
+            } else {
+                output.push(sample);
+            }
+        }
     }
 }
