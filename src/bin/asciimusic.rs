@@ -1,6 +1,6 @@
 extern crate asciimusic;
 
-use asciimusic::{Song, Note, Voice, Sawtooth, Sine, Square, Triangle};
+use asciimusic::{Song, Note, Voice, Sawtooth, Sine, Square, Triangle, Envelope, EnvelopePoint};
 use std::io::prelude::*;
 use std::io;
 
@@ -11,6 +11,26 @@ fn main() {
         sample_rate: 48_000.0,
         voices: vec!{
             Voice {
+                envelope: Envelope{
+                    points: vec!{
+                        EnvelopePoint{
+                            amplitude: 0.0,
+                            stop: 0.0,
+                        },
+                        EnvelopePoint{
+                            amplitude: 1.0,
+                            stop: 0.001,
+                        },
+                        EnvelopePoint{
+                            amplitude: 1.0,
+                            stop: -0.01,
+                        },
+                        EnvelopePoint{
+                            amplitude: 0.0,
+                            stop: -0.001,
+                        }
+                    },
+                },
                 volume: 1.0,
                 // Scientific pitch C5
                 start_frequency: 512.0,
@@ -76,6 +96,6 @@ fn main() {
     let mut handle = stdout.lock();
 
     for sample in song.iter() {
-        handle.write_all(&sample.to_bits().to_be_bytes()).unwrap();
+        handle.write_all(&dbg!(sample).to_bits().to_be_bytes()).unwrap();
     }
 }

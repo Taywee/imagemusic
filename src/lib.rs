@@ -69,7 +69,7 @@ pub struct EnvelopePoint {
 }
 
 pub struct Envelope {
-    points: Vec<EnvelopePoint>,
+    pub points: Vec<EnvelopePoint>,
 }
 
 fn lerp(x: f64, a: (f64, f64), b: (f64, f64)) -> f64 {
@@ -140,6 +140,7 @@ pub struct Voice {
 */
 pub struct VoiceIterator<'a> {
     instrument: &'a dyn Instrument,
+    envelope: &'a Envelope,
     note_iterator: Box<dyn Iterator<Item = &'a Note> + 'a>,
     current_note: Option<&'a Note>,
     note_samples: u64,
@@ -199,7 +200,14 @@ impl<'a> Iterator for VoiceIterator<'a> {
             while self.ramp >= self.sample_rate {
                 self.ramp -= self.sample_rate;
             }
-            Some(self.instrument.borrow().sample(self.ramp / self.sample_rate) * self.volume)
+            Some(
+                self.instrument.borrow().sample(self.ramp / self.sample_rate)
+                * self.volume
+                * self.envelope.amplitude_at_time(
+                    self.note_samples as f64 / self.sample_rate,
+                    self.note_current_sample as f64 / self.sample_rate,
+                    )
+                )
         }
     }
 }
@@ -255,6 +263,7 @@ impl Song {
             .map(|voice| {
                 VoiceIterator {
                     instrument: voice.instrument.borrow(),
+                    envelope: &voice.envelope,
                     note_iterator: Box::new(voice.notes.iter()),
                     current_note: None,
                     note_samples: 0,
