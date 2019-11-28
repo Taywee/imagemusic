@@ -91,7 +91,8 @@ impl Envelope {
         let mut points: Vec<EnvelopePoint> = self.points.iter().map(|point| {
             let stop = 
                 if point.stop < 0.0 {
-                    note_length - point.stop
+                    // Negative, so will subtract
+                    note_length + point.stop
                 } else {
                     point.stop
                 };
@@ -123,7 +124,7 @@ impl Envelope {
             let last_index = points.len() - 1;
             let first = points.get(last_index - 1).unwrap();
             let second = points.get(last_index).unwrap();
-            return lerp(time_point, (first.stop, first.amplitude), (second.stop, second.amplitude));
+            lerp(time_point, (first.stop, first.amplitude), (second.stop, second.amplitude))
         }
     }
 }

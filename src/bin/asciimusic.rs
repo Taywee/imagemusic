@@ -19,22 +19,26 @@ fn main() {
                         },
                         EnvelopePoint{
                             amplitude: 1.0,
-                            stop: 0.001,
+                            stop: 0.005,
                         },
                         EnvelopePoint{
-                            amplitude: 1.0,
-                            stop: -0.01,
+                            amplitude: 0.75,
+                            stop: 0.01,
+                        },
+                        EnvelopePoint{
+                            amplitude: 0.75,
+                            stop: -0.02,
                         },
                         EnvelopePoint{
                             amplitude: 0.0,
-                            stop: -0.001,
+                            stop: -0.01,
                         }
                     },
                 },
                 volume: 1.0,
                 // Scientific pitch C5
                 start_frequency: 512.0,
-                instrument: Box::new(Sine{}),
+                instrument: Box::new(Square),
                 notes: vec!{
                     Note{
                         // E
@@ -96,6 +100,6 @@ fn main() {
     let mut handle = stdout.lock();
 
     for sample in song.iter() {
-        handle.write_all(&dbg!(sample).to_bits().to_be_bytes()).unwrap();
+        handle.write_all(&sample.to_bits().to_be_bytes()).unwrap();
     }
 }
