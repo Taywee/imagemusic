@@ -9,6 +9,45 @@ use std::f64;
 //const MULTIPLIER: f64 = 2.0f64.powf(1.0 / 12.0);
 const MULTIPLIER: f64 = 1.0594630943592953098431053149397484958171844482421875;
 
+// Single base32 character conversion, signed
+pub fn from_b32(input: char) -> Result<i8, ()> {
+    Ok(match input {
+        'A' => -16,
+        'B' => -15,
+        'C' => -14,
+        'D' => -13,
+        'E' => -12,
+        'F' => -11,
+        'G' => -10,
+        'H' => -9,
+        'I' => -8,
+        'J' => -7,
+        'K' => -6,
+        'L' => -5,
+        'M' => -4,
+        'N' => -3,
+        'O' => -2,
+        'P' => -1,
+        'Q' => 0,
+        'R' => 1,
+        'S' => 2,
+        'T' => 3,
+        'U' => 4,
+        'V' => 5,
+        'W' => 6,
+        'X' => 7,
+        'Y' => 8,
+        'Z' => 9,
+        '2' => 10,
+        '3' => 11,
+        '4' => 12,
+        '5' => 13,
+        '6' => 14,
+        '7' => 15,
+        _ => return Err(()),
+    })
+}
+
 pub trait Instrument {
     /** Get a single sample.
      *
@@ -55,7 +94,7 @@ impl Instrument for Triangle {
 
 pub struct Note {
     pub pitch: i8,
-    pub length: u8,
+    pub length: i8,
 }
 
 pub struct EnvelopePoint {
@@ -259,6 +298,140 @@ impl<'a> Iterator for SongIterator<'a> {
 }
 
 impl Song {
+    pub fn load_from_str(source: &str) -> Result<Song, String> {
+        // Spawn a default song
+        let mut song = Song{
+            bps: 0.0,
+            sample_rate: 0.0,
+            voices: Vec::new(),
+        };
+        
+        let mut lines = source
+            .split("\n")
+            // .map(str::trim) maybe
+            .map(|s| s.trim())
+            // Filter empty and comment lines
+            .filter(|s| s.len() > 0 && s.chars().next() != Some('#'));
+
+        // Parse the first line for bpm and frequency
+        if let Some(first) = lines.next() {
+            let parts: Vec<&str> = first.split_whitespace().collect();
+            if parts.len() != 2 {
+                return Err(String::from("First line must be two numbers"));
+            }
+            let numbers: Result<Vec<f64>, _> = parts.iter().map(|s| s.parse()).collect();
+            match numbers {
+                Ok(numbers) => {
+                    song.bps = numbers[0];
+                    song.sample_rate = numbers[1];
+                },
+                Err(err) => {
+                    return Err(err.to_string());
+                },
+            }
+        } else {
+            return Err(String::from("Need first line of bpm and frequency"));
+        }
+
+        // Parse following lines for voice data
+        for voice_line in lines {
+            let parts: Vec<&str> = voice_line.split_whitespace().collect();
+            if parts.len() < 5 {
+                return Err(String::from("Need 5+ elements per voice: instrument, envelope, volume, base_frequency, and then notes"));
+            }
+            let instrument: Box<dyn Instrument> = match parts[0].parse::<u32>() {
+                Ok(0) => Box::new(Sawtooth),
+                Ok(1) => Box::new(Square),
+                Ok(2) => Box::new(Triangle),
+                Ok(3) => Box::new(Sine),
+                Ok(_) => return Err(String::from("No such instrument yet")),
+                Err(e) => return Err(e.to_string()),
+            };
+            let envelope: Result<Vec<Vec<f64>>, _> = parts[1]
+                .split("/")
+                .map(|s| s.split(",")
+                     .map(|s| s.parse())
+                     .collect()
+                     )
+                .collect();
+
+            let envelope_str = match envelope {
+                Ok(e) => e,
+                Err(e) => return Err(e.to_string()),
+            };
+
+            let envelope_points: Result<Vec<EnvelopePoint>, String> = envelope_str.iter()
+                .map(|points| {
+                    if points.len() == 2 {
+                        Ok(EnvelopePoint{
+                            amplitude: points[0],
+                            stop: points[1],
+                        })
+                    } else {
+                        Err(format!("Needed two points, but got {} for {:?}", points.len(), points))
+                    }
+                })
+            .collect();
+
+            let envelope = Envelope{
+                points: envelope_points?,
+            };
+
+            let volume: f64 = match parts[2].parse() {
+                Ok(v) => v,
+                Err(e) => return Err(e.to_string()),
+            };
+
+            let start_frequency: f64 = match parts[3].parse() {
+                Ok(v) => v,
+                Err(e) => return Err(e.to_string()),
+            };
+
+            let notes: String = parts
+                .iter()
+                .skip(4)
+                .flat_map(|block| block.chars())
+                .collect();
+
+            if notes.len() % 2 != 0 {
+                return Err(String::from("Need an even number of characters for notes"));
+            }
+
+            let mut note_iter = notes.chars();
+
+            let mut notes = Vec::new();
+
+            while let Some(pitch_char) = note_iter.next() {
+                let pitch = if let Ok(pitch) = from_b32(pitch_char) {
+                    pitch
+                } else {
+                    return Err(format!("Char {} not legal", pitch_char));
+                };
+                // We know we have an even number of chars
+                let length_char = note_iter.next().unwrap();
+                let length = if let Ok(length) = from_b32(length_char) {
+                    length
+                } else {
+                    return Err(format!("Char {} not legal", length_char));
+                };
+                notes.push(Note{
+                    pitch,
+                    length,
+                });
+            }
+
+            song.voices.push(Voice{
+                envelope,
+                instrument,
+                notes,
+                start_frequency,
+                volume,
+            });
+        }
+
+        Ok(song)
+    }
+
     pub fn voice_iterators(&mut self) -> Vec<VoiceIterator> {
         self.voices.iter()
             .map(|voice| {
