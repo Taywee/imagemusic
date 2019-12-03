@@ -5,104 +5,10 @@ use std::io::prelude::*;
 use std::io;
 
 fn main() -> Result<(), String> {
-    /*let mut song = Song {
-        // quarter notes per minute -> quarter notes per second -> eighth notes per second
-        bps: 180.0 / 60.0 * 2.0,
-        sample_rate: 48_000.0,
-        voices: vec!{
-            Voice {
-                envelope: Envelope{
-                    points: vec!{
-                        EnvelopePoint{
-                            amplitude: 0.0,
-                            stop: 0.0,
-                        },
-                        EnvelopePoint{
-                            amplitude: 1.0,
-                            stop: 0.005,
-                        },
-                        EnvelopePoint{
-                            amplitude: 0.75,
-                            stop: 0.01,
-                        },
-                        EnvelopePoint{
-                            amplitude: 0.75,
-                            stop: -0.02,
-                        },
-                        EnvelopePoint{
-                            amplitude: 0.0,
-                            stop: -0.01,
-                        }
-                    },
-                },
-                volume: 1.0,
-                // Scientific pitch C5
-                start_frequency: 512.0,
-                instrument: Box::new(Square),
-                notes: vec!{
-                    Note{
-                        // E
-                        pitch: 4,
-                        length: 0,
-                    },
-                    Note{
-                        // E
-                        pitch: 0,
-                        length: 0,
-                    },
-                    Note{
-                        pitch: -16,
-                        length: 0,
-                    },
-                    Note{
-                        // E
-                        pitch: 0,
-                        length: 0,
-                    },
-                    Note{
-                        pitch: -16,
-                        length: 0,
-                    },
-                    Note{
-                        // C
-                        pitch: -4,
-                        length: 0,
-                    },
-                    Note{
-                        // E
-                        pitch: 4,
-                        length: 1,
-                    },
-                    Note{
-                        // G
-                        pitch: 3,
-                        length: 1,
-                    },
-                    Note{
-                        pitch: -16,
-                        length: 1,
-                    },
-                    Note{
-                        // G
-                        pitch: -12,
-                        length: 1,
-                    },
-                    Note{
-                        pitch: -16,
-                        length: 1,
-                    },
-                },
-            },
-        }
-    };*/
-
     let input = r#"
     6 48000
     # Sawtooth, Square, Sine, Triangle
-    1 0,0/1,0.005/0.75,0.01/0.75,-0.02/0,-0.01 1 512 UQQQAQQQAQMQURTRARERAR
-
-    #1 0,0 1,0.005 0.75,0.01 0.75,-0.02 0,-0.01
-    #1 512 UQQQAQQQAQMQURTRARERAR
+    1 0,0/1,0.005/0.75,0.01/0,-0.01 1 512 UA QA AA QA AA MA UB TB AB EB AB
     "#;
 
     let mut song = Song::load_from_str(&input)?;

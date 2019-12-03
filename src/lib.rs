@@ -94,7 +94,7 @@ impl Instrument for Triangle {
 
 pub struct Note {
     pub pitch: i8,
-    pub length: i8,
+    pub length: u8,
 }
 
 pub struct EnvelopePoint {
@@ -410,7 +410,7 @@ impl Song {
                 // We know we have an even number of chars
                 let length_char = note_iter.next().unwrap();
                 let length = if let Ok(length) = from_b32(length_char) {
-                    length
+                    (length + 16) as u8
                 } else {
                     return Err(format!("Char {} not legal", length_char));
                 };
