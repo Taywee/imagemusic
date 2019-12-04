@@ -1,54 +1,17 @@
 use std::borrow::Borrow;
-// Each voice will maintain its own ramp for consistency of transition between notes.  Might make
-// the sampling a trait, and extend the traits by other traits, like trait Sampler, trait Sawtooth:
-// Sampler, but then I'll have to use dynamic typing everywhere.  I can also just make an
-// "instrument" structure, and a voice will have an instrument and notes
+
+pub mod instrument;
+pub mod base32;
+pub mod error;
+
+use instrument::Instrument;
+use base32::Base32;
+use error::LoadError;
 
 // Can not do this because powf is not a const function
 //const MULTIPLIER: f64 = 2.0f64.powf(1.0 / 12.0);
 const MULTIPLIER: f64 = 1.0594630943592953098431053149397484958171844482421875;
 
-// Single base32 character conversion, signed
-pub fn from_b32(input: char) -> Result<i8, ()> {
-    Ok(match input {
-        'A' => -16,
-        'B' => -15,
-        'C' => -14,
-        'D' => -13,
-        'E' => -12,
-        'F' => -11,
-        'G' => -10,
-        'H' => -9,
-        'I' => -8,
-        'J' => -7,
-        'K' => -6,
-        'L' => -5,
-        'M' => -4,
-        'N' => -3,
-        'O' => -2,
-        'P' => -1,
-        'Q' => 0,
-        'R' => 1,
-        'S' => 2,
-        'T' => 3,
-        'U' => 4,
-        'V' => 5,
-        'W' => 6,
-        'X' => 7,
-        'Y' => 8,
-        'Z' => 9,
-        '2' => 10,
-        '3' => 11,
-        '4' => 12,
-        '5' => 13,
-        '6' => 14,
-        '7' => 15,
-        _ => return Err(()),
-    })
-}
-
-pub mod instrument;
-use instrument::Instrument;
 
 pub struct Note {
     pub pitch: i8,
@@ -256,7 +219,7 @@ impl<'a> Iterator for SongIterator<'a> {
 }
 
 impl Song {
-    pub fn load_from_str(source: &str) -> Result<Song, String> {
+    pub fn load_from_str(source: &str) -> Result<Song, LoadError> {
         // Spawn a default song
         let mut song = Song{
             bps: 0.0,
@@ -275,7 +238,7 @@ impl Song {
         if let Some(first) = lines.next() {
             let parts: Vec<&str> = first.split_whitespace().collect();
             if parts.len() != 2 {
-                return Err(String::from("First line must be two numbers"));
+                return Err(LoadError::from("First line must be two numbers"));
             }
             let numbers: Result<Vec<f64>, _> = parts.iter().map(|s| s.parse()).collect();
             match numbers {
@@ -284,26 +247,26 @@ impl Song {
                     song.sample_rate = numbers[1];
                 },
                 Err(err) => {
-                    return Err(err.to_string());
+                    return Err(LoadError::from(format!("Could not convert bps and sample rate: {}", err)));
                 },
             }
         } else {
-            return Err(String::from("Need first line of bpm and frequency"));
+            return Err(LoadError::from("Need first line of bpm and frequency"));
         }
 
         // Parse following lines for voice data
         for voice_line in lines {
             let parts: Vec<&str> = voice_line.split_whitespace().collect();
             if parts.len() < 5 {
-                return Err(String::from("Need 5+ elements per voice: instrument, envelope, volume, base_frequency, and then notes"));
+                return Err(LoadError::from("Need 5+ elements per voice: instrument, envelope, volume, base_frequency, and then notes"));
             }
             let instrument_id: u32 = match parts[0].parse() {
                 Ok(i) => i,
-                Err(e) => return Err(e.to_string()),
+                Err(e) => return Err(LoadError::from(format!("Could not convert instrument id: {}", e))),
             };
             let instrument = match Instrument::from_id(instrument_id) {
                 Ok(i) => i,
-                Err(()) => return Err(format!("Instrument id {} not recognized", instrument_id)),
+                Err(()) => return Err(LoadError::from(format!("Instrument id {} not recognized", instrument_id))),
             };
             let envelope: Result<Vec<Vec<f64>>, _> = parts[1]
                 .split("/")
@@ -315,7 +278,7 @@ impl Song {
 
             let envelope_str = match envelope {
                 Ok(e) => e,
-                Err(e) => return Err(e.to_string()),
+                Err(e) => return Err(LoadError::from(format!("Could not convert envelope: {}", e))),
             };
 
             let envelope_points: Result<Vec<EnvelopePoint>, String> = envelope_str.iter()
@@ -337,12 +300,12 @@ impl Song {
 
             let volume: f64 = match parts[2].parse() {
                 Ok(v) => v,
-                Err(e) => return Err(e.to_string()),
+                Err(e) => return Err(LoadError::from(format!("Could not convert volume: {}", e))),
             };
 
             let start_frequency: f64 = match parts[3].parse() {
                 Ok(v) => v,
-                Err(e) => return Err(e.to_string()),
+                Err(e) => return Err(LoadError::from(format!("Could not convert frequency: {}", e))),
             };
 
             let notes: String = parts
@@ -352,7 +315,7 @@ impl Song {
                 .collect();
 
             if notes.len() % 2 != 0 {
-                return Err(String::from("Need an even number of characters for notes"));
+                return Err(LoadError::from("Need an even number of characters for notes"));
             }
 
             let mut note_iter = notes.chars();
@@ -360,18 +323,9 @@ impl Song {
             let mut notes = Vec::new();
 
             while let Some(pitch_char) = note_iter.next() {
-                let pitch = if let Ok(pitch) = from_b32(pitch_char) {
-                    pitch
-                } else {
-                    return Err(format!("Char {} not legal", pitch_char));
-                };
+                let pitch = pitch_char.base32_decode()?;
                 // We know we have an even number of chars
-                let length_char = note_iter.next().unwrap();
-                let length = if let Ok(length) = from_b32(length_char) {
-                    (length + 16) as u8
-                } else {
-                    return Err(format!("Char {} not legal", length_char));
-                };
+                let length = note_iter.next().unwrap().base32_decode()?;
                 notes.push(Note{
                     pitch,
                     length,
