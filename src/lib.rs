@@ -1,5 +1,4 @@
 use std::borrow::Borrow;
-use std::f64;
 // Each voice will maintain its own ramp for consistency of transition between notes.  Might make
 // the sampling a trait, and extend the traits by other traits, like trait Sampler, trait Sawtooth:
 // Sampler, but then I'll have to use dynamic typing everywhere.  I can also just make an
@@ -48,49 +47,8 @@ pub fn from_b32(input: char) -> Result<i8, ()> {
     })
 }
 
-pub trait Instrument {
-    /** Get a single sample.
-     *
-     * `ramp` is the frequency ramp, from 0 to 1.0, with 0 implying the beginning of a single wave
-     * and 1.0 implying the end of that wave.
-     * 
-     * Returns the wave value from -1.0 to 1.0
-     */
-    fn sample(&self, ramp: f64) -> f64;
-}
-
-pub struct Sawtooth;
-pub struct Sine;
-pub struct Square;
-pub struct Triangle;
-
-impl Instrument for Sawtooth {
-    fn sample(&self, ramp: f64) -> f64 {
-        ramp * 2.0 - 1.0
-    }
-}
-
-impl Instrument for Sine {
-    fn sample(&self, ramp: f64) -> f64 {
-        (ramp * f64::consts::PI * 2.0).sin()
-    }
-}
-
-impl Instrument for Square {
-    fn sample(&self, ramp: f64) -> f64 {
-        if ramp >= 0.5 {
-            1.0
-        } else {
-            -1.0
-        }
-    }
-}
-
-impl Instrument for Triangle {
-    fn sample(&self, ramp: f64) -> f64 {
-        (((ramp - 0.25).abs() - 0.5).abs() - 0.25) * 4.0
-    }
-}
+pub mod instrument;
+use instrument::Instrument;
 
 pub struct Note {
     pub pitch: i8,
@@ -339,13 +297,13 @@ impl Song {
             if parts.len() < 5 {
                 return Err(String::from("Need 5+ elements per voice: instrument, envelope, volume, base_frequency, and then notes"));
             }
-            let instrument: Box<dyn Instrument> = match parts[0].parse::<u32>() {
-                Ok(0) => Box::new(Sawtooth),
-                Ok(1) => Box::new(Square),
-                Ok(2) => Box::new(Triangle),
-                Ok(3) => Box::new(Sine),
-                Ok(_) => return Err(String::from("No such instrument yet")),
+            let instrument_id: u32 = match parts[0].parse() {
+                Ok(i) => i,
                 Err(e) => return Err(e.to_string()),
+            };
+            let instrument = match Instrument::from_id(instrument_id) {
+                Ok(i) => i,
+                Err(()) => return Err(format!("Instrument id {} not recognized", instrument_id)),
             };
             let envelope: Result<Vec<Vec<f64>>, _> = parts[1]
                 .split("/")

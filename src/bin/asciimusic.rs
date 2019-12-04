@@ -1,6 +1,6 @@
 extern crate asciimusic;
 
-use asciimusic::{Song, Note, Voice, Sawtooth, Sine, Square, Triangle, Envelope, EnvelopePoint};
+use asciimusic::Song;
 use std::io::prelude::*;
 use std::io;
 
