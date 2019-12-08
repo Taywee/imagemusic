@@ -2,7 +2,8 @@
 name = "asciimusic"
 description = "Simple and fun, but largely useless, program and library for processing a base32-based text format to audio output"
 license = "MIT"
-version = "0.1.0"
+readme = "README.md"
+version = "0.1.1"
 authors = ["Taylor C. Richberger <taywee@gmx.com>"]
 edition = "2018"
 
