@@ -5,7 +5,7 @@ pub trait Instrument {
      *
      * `ramp` is the frequency ramp, from 0 to 1.0, with 0 implying the beginning of a single wave
      * and 1.0 implying the end of that wave.
-     * 
+     *
      * Returns the wave value from -1.0 to 1.0
      */
     fn sample(&self, ramp: f64) -> f64;

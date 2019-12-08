@@ -1,9 +1,9 @@
 extern crate asciimusic;
 
-use asciimusic::Song;
 use asciimusic::error::LoadError;
-use std::io::prelude::*;
+use asciimusic::Song;
 use std::io;
+use std::io::prelude::*;
 
 fn main() -> Result<(), LoadError> {
     let input = r#"
@@ -22,14 +22,3 @@ fn main() -> Result<(), LoadError> {
     }
     Ok(())
 }
-
-/* table:
--16=A       -8=I       0=Q        8=Y
--15=B       -7=J       1=R        9=Z
--14=C       -6=K       2=S       10=2
--13=D       -5=L       3=T       11=3
--12=E       -4=M       4=U       12=4
--11=F       -3=N       5=V       13=5
--10=G       -2=O       6=W       14=6
- -9=H       -1=P       7=X       15=7 
-*/

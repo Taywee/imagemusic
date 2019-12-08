@@ -51,26 +51,27 @@ impl<'a> Iterator for VoiceIterator<'a> {
 
             self.current_note = match self.note_iterator.next() {
                 Some(note) => {
-                    self.note_samples = (self.seconds_per_beat * self.sample_rate) as u64 * (note.length as u64 + 1);
+                    self.note_samples = (self.seconds_per_beat * self.sample_rate) as u64
+                        * (note.length as u64 + 1);
                     // -16 is special rest value, 0 is no change, change is shifting up or down
                     match note.pitch {
                         -16 => {
                             self.resting = true;
                             self.ramp = 0.0;
-                        },
+                        }
                         pitch => {
                             self.resting = false;
                             if pitch != 0 {
                                 self.frequency *= MULTIPLIER.powi(pitch as i32);
                             }
-                        },
+                        }
                     }
                     Some(note)
                 }
                 None => {
                     self.done = true;
                     return None;
-                },
+                }
             }
         }
 
@@ -84,13 +85,15 @@ impl<'a> Iterator for VoiceIterator<'a> {
                 self.ramp -= self.sample_rate;
             }
             Some(
-                self.instrument.borrow().sample(self.ramp / self.sample_rate)
-                * self.volume
-                * self.envelope.amplitude_at_time(
-                    self.note_samples as f64 / self.sample_rate,
-                    self.note_current_sample as f64 / self.sample_rate,
-                    )
-                )
+                self.instrument
+                    .borrow()
+                    .sample(self.ramp / self.sample_rate)
+                    * self.volume
+                    * self.envelope.amplitude_at_time(
+                        self.note_samples as f64 / self.sample_rate,
+                        self.note_current_sample as f64 / self.sample_rate,
+                    ),
+            )
         }
     }
 }

@@ -4,7 +4,7 @@ use std::fmt;
 /** Trait that describes that a type may be converted from base32 with a standard defined
  * conversion.
  */
-pub trait FromBase32 : Sized {
+pub trait FromBase32: Sized {
     fn from_base32(source: char) -> Result<Self, error::FromBase32Error>;
 }
 
@@ -15,7 +15,7 @@ impl FromBase32 for i8 {
         Ok(match source.to_ascii_uppercase() {
             x @ 'A'..='Z' => (x as u8 - 'A' as u8) as i8 - 16,
             x @ '2'..='7' => (x as u8 - '2' as u8) as i8 + 10,
-            source => return Err(error::FromBase32Error{source}),
+            source => return Err(error::FromBase32Error { source }),
         })
     }
 }
@@ -27,7 +27,7 @@ impl FromBase32 for u8 {
         Ok(match source.to_ascii_uppercase() {
             x @ 'A'..='Z' => x as u8 - 'A' as u8,
             x @ '2'..='7' => x as u8 - '2' as u8 + 26,
-            source => return Err(error::FromBase32Error{source}),
+            source => return Err(error::FromBase32Error { source }),
         })
     }
 }
@@ -47,7 +47,7 @@ impl ToBase32 for i8 {
         Ok(match self {
             x @ -16..=9 => ('A' as u8 as i8 + 16 + x) as u8 as char,
             x @ 10..=16 => ('2' as u8 as i8 + x - 10) as u8 as char,
-            source => return Err(error::ToBase32Error{source}),
+            source => return Err(error::ToBase32Error { source }),
         })
     }
 }
@@ -59,7 +59,7 @@ impl ToBase32 for u8 {
         Ok(match self {
             x @ 0..=25 => ('A' as u8 + x) as char,
             x @ 26..=31 => ('2' as u8 + x - 26) as char,
-            source => return Err(error::ToBase32Error{source}),
+            source => return Err(error::ToBase32Error { source }),
         })
     }
 }
@@ -68,11 +68,16 @@ impl ToBase32 for u8 {
  * convenience, like Collect.
  */
 pub trait Base32 {
-    fn base32_decode<T>(self) -> Result<T, error::FromBase32Error> where T: FromBase32;
+    fn base32_decode<T>(self) -> Result<T, error::FromBase32Error>
+    where
+        T: FromBase32;
 }
 
 impl Base32 for char {
-    fn base32_decode<T>(self) -> Result<T, error::FromBase32Error> where T: FromBase32 {
+    fn base32_decode<T>(self) -> Result<T, error::FromBase32Error>
+    where
+        T: FromBase32,
+    {
         T::from_base32(self)
     }
 }

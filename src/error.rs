@@ -31,8 +31,7 @@ impl From<base32::FromBase32Error> for LoadError {
     }
 }
 
-impl Error for LoadError {
-}
+impl Error for LoadError {}
 
 impl fmt::Display for LoadError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

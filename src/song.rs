@@ -2,7 +2,7 @@ use crate::base32::Base32;
 use crate::envelope::{Envelope, EnvelopePoint};
 use crate::error::LoadError;
 use crate::instrument::Instrument;
-use crate::voice::{Voice, VoiceIterator, Note};
+use crate::voice::{Note, Voice, VoiceIterator};
 use std::borrow::Borrow;
 
 /**
@@ -60,12 +60,12 @@ impl Song {
      */
     pub fn load_from_str(source: &str) -> Result<Song, LoadError> {
         // Spawn a default song
-        let mut song = Song{
+        let mut song = Song {
             bps: 0.0,
             sample_rate: 0.0,
             voices: Vec::new(),
         };
-        
+
         let mut lines = source
             .split("\n")
             .map(str::trim)
@@ -83,10 +83,13 @@ impl Song {
                 Ok(numbers) => {
                     song.bps = numbers[0];
                     song.sample_rate = numbers[1];
-                },
+                }
                 Err(err) => {
-                    return Err(LoadError::from(format!("Could not convert bps and sample rate: {}", err)));
-                },
+                    return Err(LoadError::from(format!(
+                        "Could not convert bps and sample rate: {}",
+                        err
+                    )));
+                }
             }
         } else {
             return Err(LoadError::from("Need first line of bpm and frequency"));
@@ -100,39 +103,56 @@ impl Song {
             }
             let instrument_id: u32 = match parts[0].parse() {
                 Ok(i) => i,
-                Err(e) => return Err(LoadError::from(format!("Could not convert instrument id: {}", e))),
+                Err(e) => {
+                    return Err(LoadError::from(format!(
+                        "Could not convert instrument id: {}",
+                        e
+                    )))
+                }
             };
             let instrument = match Instrument::from_id(instrument_id) {
                 Ok(i) => i,
-                Err(()) => return Err(LoadError::from(format!("Instrument id {} not recognized", instrument_id))),
+                Err(()) => {
+                    return Err(LoadError::from(format!(
+                        "Instrument id {} not recognized",
+                        instrument_id
+                    )))
+                }
             };
             let envelope: Result<Vec<Vec<f64>>, _> = parts[1]
                 .split("/")
-                .map(|s| s.split(",")
-                     .map(|s| s.parse())
-                     .collect()
-                     )
+                .map(|s| s.split(",").map(|s| s.parse()).collect())
                 .collect();
 
             let envelope_str = match envelope {
                 Ok(e) => e,
-                Err(e) => return Err(LoadError::from(format!("Could not convert envelope: {}", e))),
+                Err(e) => {
+                    return Err(LoadError::from(format!(
+                        "Could not convert envelope: {}",
+                        e
+                    )))
+                }
             };
 
-            let envelope_points: Result<Vec<EnvelopePoint>, String> = envelope_str.iter()
+            let envelope_points: Result<Vec<EnvelopePoint>, String> = envelope_str
+                .iter()
                 .map(|points| {
                     if points.len() == 2 {
-                        Ok(EnvelopePoint{
+                        Ok(EnvelopePoint {
                             amplitude: points[0],
                             stop: points[1],
                         })
                     } else {
-                        Err(format!("Needed two points, but got {} for {:?}", points.len(), points))
+                        Err(format!(
+                            "Needed two points, but got {} for {:?}",
+                            points.len(),
+                            points
+                        ))
                     }
                 })
-            .collect();
+                .collect();
 
-            let envelope = Envelope{
+            let envelope = Envelope {
                 points: envelope_points?,
             };
 
@@ -143,7 +163,12 @@ impl Song {
 
             let start_frequency: f64 = match parts[3].parse() {
                 Ok(v) => v,
-                Err(e) => return Err(LoadError::from(format!("Could not convert frequency: {}", e))),
+                Err(e) => {
+                    return Err(LoadError::from(format!(
+                        "Could not convert frequency: {}",
+                        e
+                    )))
+                }
             };
 
             let notes: String = parts
@@ -153,7 +178,9 @@ impl Song {
                 .collect();
 
             if notes.len() % 2 != 0 {
-                return Err(LoadError::from("Need an even number of characters for notes"));
+                return Err(LoadError::from(
+                    "Need an even number of characters for notes",
+                ));
             }
 
             let mut note_iter = notes.chars();
@@ -164,13 +191,10 @@ impl Song {
                 let pitch = pitch_char.base32_decode()?;
                 // We know we have an even number of chars
                 let length = note_iter.next().unwrap().base32_decode()?;
-                notes.push(Note{
-                    pitch,
-                    length,
-                });
+                notes.push(Note { pitch, length });
             }
 
-            song.voices.push(Voice{
+            song.voices.push(Voice {
                 envelope,
                 instrument,
                 notes,
@@ -183,25 +207,24 @@ impl Song {
     }
 
     pub fn voice_iterators(&mut self) -> Vec<VoiceIterator> {
-        self.voices.iter()
-            .map(|voice| {
-                VoiceIterator {
-                    instrument: voice.instrument.borrow(),
-                    envelope: &voice.envelope,
-                    note_iterator: Box::new(voice.notes.iter()),
-                    current_note: None,
-                    note_samples: 0,
-                    note_current_sample: 0,
-                    done: false,
-                    resting: false,
-                    seconds_per_beat: 1.0 / self.bps,
-                    sample_rate: self.sample_rate,
-                    frequency: voice.start_frequency,
-                    ramp: 0.0,
-                    volume: voice.volume,
-                }
+        self.voices
+            .iter()
+            .map(|voice| VoiceIterator {
+                instrument: voice.instrument.borrow(),
+                envelope: &voice.envelope,
+                note_iterator: Box::new(voice.notes.iter()),
+                current_note: None,
+                note_samples: 0,
+                note_current_sample: 0,
+                done: false,
+                resting: false,
+                seconds_per_beat: 1.0 / self.bps,
+                sample_rate: self.sample_rate,
+                frequency: voice.start_frequency,
+                ramp: 0.0,
+                volume: voice.volume,
             })
-        .collect()
+            .collect()
     }
 
     /** Render the song as f64 samples.
@@ -209,7 +232,7 @@ impl Song {
     pub fn samples(&mut self) -> SongIterator {
         let voice_iterators = self.voice_iterators();
         let volume_modifier = 1.0 / (voice_iterators.len() as f64);
-        SongIterator{
+        SongIterator {
             voice_iterators,
             volume_modifier,
         }

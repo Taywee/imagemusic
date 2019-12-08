@@ -28,20 +28,23 @@ impl Envelope {
         }
 
         // Envelope points are made absolute here (all to time from beginning)
-        let mut points: Vec<EnvelopePoint> = self.points.iter().map(|point| {
-            let stop = 
-                if point.stop < 0.0 {
+        let mut points: Vec<EnvelopePoint> = self
+            .points
+            .iter()
+            .map(|point| {
+                let stop = if point.stop < 0.0 {
                     // Negative, so will subtract
                     note_length + point.stop
                 } else {
                     point.stop
                 };
 
-            EnvelopePoint{
-                amplitude: point.amplitude,
-                stop,
-            }
-        }).collect();
+                EnvelopePoint {
+                    amplitude: point.amplitude,
+                    stop,
+                }
+            })
+            .collect();
 
         // Sort the points
         points.sort_by(|a, b| a.stop.partial_cmp(&b.stop).unwrap());
@@ -56,7 +59,11 @@ impl Envelope {
                 let first = points.get(i - 1).unwrap();
                 let second = points.get(i).unwrap();
                 if first.stop <= time_point && time_point <= second.stop {
-                    return lerp(time_point, (first.stop, first.amplitude), (second.stop, second.amplitude));
+                    return lerp(
+                        time_point,
+                        (first.stop, first.amplitude),
+                        (second.stop, second.amplitude),
+                    );
                 }
             }
 
@@ -64,8 +71,11 @@ impl Envelope {
             let last_index = points.len() - 1;
             let first = points.get(last_index - 1).unwrap();
             let second = points.get(last_index).unwrap();
-            lerp(time_point, (first.stop, first.amplitude), (second.stop, second.amplitude))
+            lerp(
+                time_point,
+                (first.stop, first.amplitude),
+                (second.stop, second.amplitude),
+            )
         }
     }
 }
-
