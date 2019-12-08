@@ -1,5 +1,5 @@
 /*!
- * The main entry point to this crate is [`song::Song`](asciimusic::song::Song)
+ * The main entry point to this crate is [`song::Song`](song/struct.Song.html)
  */
 
 mod instrument;
