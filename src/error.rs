@@ -1,12 +1,16 @@
-use crate::base32;
+/*! This module contains or re-exports all error types for this crate.
+*/
+
+pub use crate::base32::error as base32;
 use std::convert::From;
 use std::error::Error;
 use std::fmt;
 
+/// An error in loading data, typically a song.
 #[derive(Debug)]
 pub enum LoadError {
     Format(String),
-    FromBase32(base32::error::FromBase32Error),
+    FromBase32(base32::FromBase32Error),
 }
 
 impl From<&str> for LoadError {
@@ -21,8 +25,8 @@ impl From<String> for LoadError {
     }
 }
 
-impl From<base32::error::FromBase32Error> for LoadError {
-    fn from(error: base32::error::FromBase32Error) -> Self {
+impl From<base32::FromBase32Error> for LoadError {
+    fn from(error: base32::FromBase32Error) -> Self {
         LoadError::FromBase32(error)
     }
 }

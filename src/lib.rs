@@ -1,8 +1,12 @@
-pub mod instrument;
-pub mod base32;
+/*!
+ * The main entry point to this crate is [`song::Song`](asciimusic::song::Song)
+ */
+
+mod instrument;
+mod base32;
 pub mod error;
-pub mod envelope;
-pub mod voice;
+mod envelope;
+mod voice;
 pub mod song;
 
-pub use song::Song;
+pub use crate::song::Song;

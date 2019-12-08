@@ -5,15 +5,20 @@ use crate::instrument::Instrument;
 use crate::voice::{Voice, VoiceIterator, Note};
 use std::borrow::Borrow;
 
+/**
+ * The entire song as a structure.
+ *
+ * Contains the base data as well as all the voices.
+ */
 pub struct Song {
-    pub bps: f64,
-    pub voices: Vec<Voice>,
-    pub sample_rate: f64,
+    bps: f64,
+    voices: Vec<Voice>,
+    sample_rate: f64,
 }
 
 pub struct SongIterator<'a> {
-    pub voice_iterators: Vec<VoiceIterator<'a>>,
-    pub volume_modifier: f64,
+    voice_iterators: Vec<VoiceIterator<'a>>,
+    volume_modifier: f64,
 }
 
 impl<'a> Iterator for SongIterator<'a> {
@@ -51,6 +56,8 @@ impl<'a> Iterator for SongIterator<'a> {
 }
 
 impl Song {
+    /** Load the song in from an ascii-formatted string.
+     */
     pub fn load_from_str(source: &str) -> Result<Song, LoadError> {
         // Spawn a default song
         let mut song = Song{
@@ -61,8 +68,7 @@ impl Song {
         
         let mut lines = source
             .split("\n")
-            // .map(str::trim) maybe
-            .map(|s| s.trim())
+            .map(str::trim)
             // Filter empty and comment lines
             .filter(|s| s.len() > 0 && s.chars().next() != Some('#'));
 
@@ -198,7 +204,9 @@ impl Song {
         .collect()
     }
 
-    pub fn iter(&mut self) -> SongIterator {
+    /** Render the song as f64 samples.
+     */
+    pub fn samples(&mut self) -> SongIterator {
         let voice_iterators = self.voice_iterators();
         let volume_modifier = 1.0 / (voice_iterators.len() as f64);
         SongIterator{

@@ -17,7 +17,7 @@ fn main() -> Result<(), LoadError> {
     let stdout = io::stdout();
     let mut handle = stdout.lock();
 
-    for sample in song.iter() {
+    for sample in song.samples() {
         handle.write_all(&sample.to_bits().to_be_bytes()).unwrap();
     }
     Ok(())
