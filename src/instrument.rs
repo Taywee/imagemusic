@@ -40,8 +40,7 @@ impl Instrument for Square {
 
 impl Instrument for Triangle {
     fn sample(&self, ramp: f64) -> f64 {
-        (((ramp - 0.25).abs() - 0.5).abs() - 0.25
-         ) * 4.0
+        (((ramp - 0.25).abs() - 0.5).abs() - 0.25) * 4.0
     }
 }
 
