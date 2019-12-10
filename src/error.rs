@@ -5,12 +5,14 @@ pub use crate::base32::error as base32;
 use std::convert::From;
 use std::error::Error;
 use std::fmt;
+use std::str;
 
 /// An error in loading data, typically a song.
 #[derive(Debug)]
 pub enum LoadError {
     Format(String),
     FromBase32(base32::FromBase32Error),
+    Utf8(str::Utf8Error),
 }
 
 impl From<&str> for LoadError {
@@ -31,6 +33,12 @@ impl From<base32::FromBase32Error> for LoadError {
     }
 }
 
+impl From<str::Utf8Error> for LoadError {
+    fn from(error: str::Utf8Error) -> Self {
+        LoadError::Utf8(error)
+    }
+}
+
 impl Error for LoadError {}
 
 impl fmt::Display for LoadError {
@@ -38,6 +46,7 @@ impl fmt::Display for LoadError {
         match self {
             LoadError::Format(s) => write!(f, "Error with input format: {}", s),
             LoadError::FromBase32(e) => write!(f, "Error with base32: {}", e),
+            LoadError::Utf8(e) => write!(f, "Error with utf8: {}", e),
         }
     }
 }

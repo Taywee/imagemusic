@@ -4,6 +4,8 @@ use crate::error::LoadError;
 use crate::instrument::Instrument;
 use crate::voice::{Note, Voice, VoiceIterator};
 use std::borrow::Borrow;
+use std::io::Read;
+use std::str;
 
 /**
  * The entire song as a structure.
@@ -56,9 +58,10 @@ impl<'a> Iterator for SongIterator<'a> {
 }
 
 impl Song {
-    /** Load the song in from an ascii-formatted string.
+    /**
+     * Load the song in from an ascii-formatted source.
      */
-    pub fn load_from_str(source: &str) -> Result<Song, LoadError> {
+    pub fn load_ascii(source: &mut dyn Read) -> Result<Song, LoadError> {
         // Spawn a default song
         let mut song = Song {
             bps: 0.0,
@@ -66,11 +69,18 @@ impl Song {
             voices: Vec::new(),
         };
 
-        let mut lines = source
-            .split("\n")
-            .map(str::trim)
-            // Filter empty and comment lines
-            .filter(|s| s.len() > 0 && s.chars().next() != Some('#'));
+        let mut lines: Vec<String> = {
+            let mut vec = Vec::new();
+            source.read_to_end(&mut vec);
+            str::from_utf8(&vec)?
+                .split("\n")
+                .map(str::trim)
+                // Filter empty and comment lines
+                .filter(|s| s.len() > 0 && s.chars().next() != Some('#'))
+                .map(String::from)
+                .collect()
+        };
+        let mut lines = lines.into_iter();
 
         // Parse the first line for bpm and frequency
         if let Some(first) = lines.next() {
@@ -202,6 +212,52 @@ impl Song {
                 volume,
             });
         }
+
+        Ok(song)
+    }
+
+    /**
+     * Load the song in from a musicxml-formatted source (not compressed)
+     *
+     * Will have to load in interestingly.  Need to have a map of voices, mapping from a tuple or
+     * struct of part id, voice id, and position in chord.
+     * Need to figure out how missing measures and beats are considered by the standard.  Are
+     * voices interleaved?  Will we have to fill in rests?
+     * As we go, we will add voices and beats.  Need to figure out how to handle chords.  It will
+     * have to be handled as a separate voice regardless, as the format doesn't allow chords to be
+     * specified.
+     *
+     * Options:
+     *
+     *  * Allow a single voice to handle chords, which can be stacked.  Volume might make this
+     *  difficult, as we then don't know how much to drop the volume.
+     *  
+     *      * Can't post-process volume, because the API relies on the ability to stream out samples.
+     *      * Maybe just make volume configurable, but that could easily be done by the consuming
+     *      API.
+     *      * Probably have each voice maintain a value for its max chord size.
+     *      * This also will have issues because the canonical ascii format will have to be able to
+     *      encode stacked notes.  This would make things a little easier with the musicxml
+     *      interop, though.
+     *
+     *  * Track current position per part and voice, because every note needs a part and a voice,
+     * but not necessarily a chord.  All chords are coordinated by different voices.
+     *
+     *      * Each non-chord note advances the position by its length.  Each chord note does not
+     *      advance the position.  When a non-existent voice would come in, check the current
+     *      position and back-fill with rests.
+     *
+     *  * A mix of the two.  A single voice handles chords, but this is not a feature in the ascii
+     *  format, which just encodes it all as different voices, and loads all voices with
+     *  single-note runs.
+     */
+    pub fn load_uncompressed_musicxml(source: &mut dyn Read) -> Result<Song, LoadError> {
+        // Spawn a default song
+        let mut song = Song {
+            bps: 0.0,
+            sample_rate: 0.0,
+            voices: Vec::new(),
+        };
 
         Ok(song)
     }

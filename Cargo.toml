@@ -16,3 +16,4 @@ default-run = "asciimusic"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+quick-xml = "0.17.0"

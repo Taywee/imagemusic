@@ -12,7 +12,7 @@ fn main() -> Result<(), LoadError> {
     1 0,0/1,0.005/0.75,0.01/0,-0.01 1 512 UA QA AA QA AA MA UB TB AB EB AB
     "#;
 
-    let mut song = Song::load_from_str(&input)?;
+    let mut song = Song::load_ascii(&mut input.as_bytes())?;
 
     let stdout = io::stdout();
     let mut handle = stdout.lock();
