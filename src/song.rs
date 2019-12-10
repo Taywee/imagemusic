@@ -1,6 +1,6 @@
 use crate::base32::Base32;
 use crate::envelope::{Envelope, EnvelopePoint};
-use crate::error::LoadError;
+use crate::error::{AsciiLoadError, MusicXMLLoadError};
 use crate::instrument::Instrument;
 use crate::voice::{Note, Voice, VoiceIterator};
 use std::borrow::Borrow;
@@ -61,7 +61,7 @@ impl Song {
     /**
      * Load the song in from an ascii-formatted source.
      */
-    pub fn load_ascii(source: &mut dyn Read) -> Result<Song, LoadError> {
+    pub fn load_ascii(source: &mut dyn Read) -> Result<Song, AsciiLoadError> {
         // Spawn a default song
         let mut song = Song {
             bps: 0.0,
@@ -86,7 +86,7 @@ impl Song {
         if let Some(first) = lines.next() {
             let parts: Vec<&str> = first.split_whitespace().collect();
             if parts.len() != 2 {
-                return Err(LoadError::from("First line must be two numbers"));
+                return Err(AsciiLoadError::from("First line must be two numbers"));
             }
             let numbers: Result<Vec<f64>, _> = parts.iter().map(|s| s.parse()).collect();
             match numbers {
@@ -95,26 +95,26 @@ impl Song {
                     song.sample_rate = numbers[1];
                 }
                 Err(err) => {
-                    return Err(LoadError::from(format!(
+                    return Err(AsciiLoadError::from(format!(
                         "Could not convert bps and sample rate: {}",
                         err
                     )));
                 }
             }
         } else {
-            return Err(LoadError::from("Need first line of bpm and frequency"));
+            return Err(AsciiLoadError::from("Need first line of bpm and frequency"));
         }
 
         // Parse following lines for voice data
         for voice_line in lines {
             let parts: Vec<&str> = voice_line.split_whitespace().collect();
             if parts.len() < 5 {
-                return Err(LoadError::from("Need 5+ elements per voice: instrument, envelope, volume, base_frequency, and then notes"));
+                return Err(AsciiLoadError::from("Need 5+ elements per voice: instrument, envelope, volume, base_frequency, and then notes"));
             }
             let instrument_id: u32 = match parts[0].parse() {
                 Ok(i) => i,
                 Err(e) => {
-                    return Err(LoadError::from(format!(
+                    return Err(AsciiLoadError::from(format!(
                         "Could not convert instrument id: {}",
                         e
                     )))
@@ -123,7 +123,7 @@ impl Song {
             let instrument = match Instrument::from_id(instrument_id) {
                 Ok(i) => i,
                 Err(()) => {
-                    return Err(LoadError::from(format!(
+                    return Err(AsciiLoadError::from(format!(
                         "Instrument id {} not recognized",
                         instrument_id
                     )))
@@ -137,7 +137,7 @@ impl Song {
             let envelope_str = match envelope {
                 Ok(e) => e,
                 Err(e) => {
-                    return Err(LoadError::from(format!(
+                    return Err(AsciiLoadError::from(format!(
                         "Could not convert envelope: {}",
                         e
                     )))
@@ -168,13 +168,18 @@ impl Song {
 
             let volume: f64 = match parts[2].parse() {
                 Ok(v) => v,
-                Err(e) => return Err(LoadError::from(format!("Could not convert volume: {}", e))),
+                Err(e) => {
+                    return Err(AsciiLoadError::from(format!(
+                        "Could not convert volume: {}",
+                        e
+                    )))
+                }
             };
 
             let start_frequency: f64 = match parts[3].parse() {
                 Ok(v) => v,
                 Err(e) => {
-                    return Err(LoadError::from(format!(
+                    return Err(AsciiLoadError::from(format!(
                         "Could not convert frequency: {}",
                         e
                     )))
@@ -188,7 +193,7 @@ impl Song {
                 .collect();
 
             if notes.len() % 2 != 0 {
-                return Err(LoadError::from(
+                return Err(AsciiLoadError::from(
                     "Need an even number of characters for notes",
                 ));
             }
@@ -251,7 +256,7 @@ impl Song {
      *  format, which just encodes it all as different voices, and loads all voices with
      *  single-note runs.
      */
-    pub fn load_uncompressed_musicxml(source: &mut dyn Read) -> Result<Song, LoadError> {
+    pub fn load_uncompressed_musicxml(source: &mut dyn Read) -> Result<Song, MusicXMLLoadError> {
         // Spawn a default song
         let mut song = Song {
             bps: 0.0,

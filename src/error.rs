@@ -7,46 +7,52 @@ use std::error::Error;
 use std::fmt;
 use std::str;
 
-/// An error in loading data, typically a song.
+/// An error in loading data from an ascii song
 #[derive(Debug)]
-pub enum LoadError {
+pub enum AsciiLoadError {
     Format(String),
     FromBase32(base32::FromBase32Error),
     Utf8(str::Utf8Error),
 }
 
-impl From<&str> for LoadError {
+impl From<&str> for AsciiLoadError {
     fn from(description: &str) -> Self {
-        LoadError::Format(String::from(description))
+        AsciiLoadError::Format(String::from(description))
     }
 }
 
-impl From<String> for LoadError {
+impl From<String> for AsciiLoadError {
     fn from(description: String) -> Self {
-        LoadError::Format(description)
+        AsciiLoadError::Format(description)
     }
 }
 
-impl From<base32::FromBase32Error> for LoadError {
+impl From<base32::FromBase32Error> for AsciiLoadError {
     fn from(error: base32::FromBase32Error) -> Self {
-        LoadError::FromBase32(error)
+        AsciiLoadError::FromBase32(error)
     }
 }
 
-impl From<str::Utf8Error> for LoadError {
+impl From<str::Utf8Error> for AsciiLoadError {
     fn from(error: str::Utf8Error) -> Self {
-        LoadError::Utf8(error)
+        AsciiLoadError::Utf8(error)
     }
 }
 
-impl Error for LoadError {}
+impl Error for AsciiLoadError {}
 
-impl fmt::Display for LoadError {
+impl fmt::Display for AsciiLoadError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            LoadError::Format(s) => write!(f, "Error with input format: {}", s),
-            LoadError::FromBase32(e) => write!(f, "Error with base32: {}", e),
-            LoadError::Utf8(e) => write!(f, "Error with utf8: {}", e),
+            AsciiLoadError::Format(s) => write!(f, "Error with input format: {}", s),
+            AsciiLoadError::FromBase32(e) => write!(f, "Error with base32: {}", e),
+            AsciiLoadError::Utf8(e) => write!(f, "Error with utf8: {}", e),
         }
     }
+}
+
+/// An error in loading data from an ascii song
+#[derive(Debug)]
+pub enum MusicXMLLoadError {
+    Format(String),
 }
