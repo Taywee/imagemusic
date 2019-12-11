@@ -4,7 +4,8 @@
 name = "asciimusic"
 version = "0.1.3"
 dependencies = [
- "quick-xml 0.17.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "minidom 0.11.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "quick-xml 0.16.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -13,8 +14,16 @@ version = "2.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
+name = "minidom"
+version = "0.11.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "quick-xml 0.16.1 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "quick-xml"
-version = "0.17.0"
+version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "memchr 2.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -22,4 +31,5 @@ dependencies = [
 
 [metadata]
 "checksum memchr 2.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "88579771288728879b57485cc7d6b07d648c9f0141eb955f8ab7f9d45394468e"
-"checksum quick-xml 0.17.0 (registry+https://github.com/rust-lang/crates.io-index)" = "aafcdba8c8d71275493d966ef052a88726ac8590c15a09968b32158205c672ef"
+"checksum minidom 0.11.1 (registry+https://github.com/rust-lang/crates.io-index)" = "df1f29c97815c4328d6b533d2b8976e80cbed02d97063970aa4a80c100ecf29a"
+"checksum quick-xml 0.16.1 (registry+https://github.com/rust-lang/crates.io-index)" = "1cd45021132c1cb5540995e93fcc2cf5a874ef84f9639168fb6819caa023d4be"

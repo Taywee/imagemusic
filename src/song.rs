@@ -3,7 +3,10 @@ use crate::envelope::{Envelope, EnvelopePoint};
 use crate::error::{AsciiLoadError, MusicXMLLoadError};
 use crate::instrument::Instrument;
 use crate::voice::{Note, Voice, VoiceIterator};
+use minidom::Element;
+use quick_xml::Reader;
 use std::borrow::Borrow;
+use std::io::BufReader;
 use std::io::Read;
 use std::str;
 
@@ -69,9 +72,9 @@ impl Song {
             voices: Vec::new(),
         };
 
-        let mut lines: Vec<String> = {
+        let lines: Vec<String> = {
             let mut vec = Vec::new();
-            source.read_to_end(&mut vec);
+            source.read_to_end(&mut vec)?;
             str::from_utf8(&vec)?
                 .split("\n")
                 .map(str::trim)
@@ -263,6 +266,17 @@ impl Song {
             sample_rate: 0.0,
             voices: Vec::new(),
         };
+
+        let buf_reader = BufReader::new(source);
+        let mut reader = Reader::from_reader(buf_reader);
+        let dom = Element::from_reader(&mut reader)?;
+
+        if dom.name() != "score-partwise" {
+            return Err(MusicXMLLoadError::from(format!(
+                "Could not load musicxml with root element {}.  Need score-partwise.",
+                dom.name()
+            )));
+        }
 
         Ok(song)
     }
