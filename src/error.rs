@@ -95,3 +95,37 @@ impl fmt::Display for MusicXMLLoadError {
         }
     }
 }
+
+/**
+ * Top-level load error type.
+ *
+ * This is a convenience type for the main function.
+ */
+#[derive(Debug)]
+pub enum LoadError {
+    Ascii(AsciiLoadError),
+    MusicXML(MusicXMLLoadError),
+}
+
+impl From<MusicXMLLoadError> for LoadError {
+    fn from(error: MusicXMLLoadError) -> Self {
+        LoadError::MusicXML(error)
+    }
+}
+
+impl From<AsciiLoadError> for LoadError {
+    fn from(error: AsciiLoadError) -> Self {
+        LoadError::Ascii(error)
+    }
+}
+
+impl Error for LoadError {}
+
+impl fmt::Display for LoadError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            LoadError::Ascii(e) => write!(f, "Error with ascii: {}", e),
+            LoadError::MusicXML(e) => write!(f, "Error with musicxml: {}", e),
+        }
+    }
+}
