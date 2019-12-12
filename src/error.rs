@@ -95,6 +95,23 @@ impl fmt::Display for MusicXMLLoadError {
         }
     }
 }
+/// An error in loading data from an ascii song
+#[derive(Debug)]
+pub enum GenerateSamplesError {
+    EmptyVoice,
+}
+
+impl Error for GenerateSamplesError {}
+
+impl fmt::Display for GenerateSamplesError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            GenerateSamplesError::EmptyVoice => {
+                write!(f, "Tried to generate VoiceIterator an empty voice")
+            }
+        }
+    }
+}
 
 /**
  * Top-level load error type.
@@ -105,6 +122,13 @@ impl fmt::Display for MusicXMLLoadError {
 pub enum LoadError {
     Ascii(AsciiLoadError),
     MusicXML(MusicXMLLoadError),
+    GenerateSamples(GenerateSamplesError),
+}
+
+impl From<AsciiLoadError> for LoadError {
+    fn from(error: AsciiLoadError) -> Self {
+        LoadError::Ascii(error)
+    }
 }
 
 impl From<MusicXMLLoadError> for LoadError {
@@ -113,9 +137,9 @@ impl From<MusicXMLLoadError> for LoadError {
     }
 }
 
-impl From<AsciiLoadError> for LoadError {
-    fn from(error: AsciiLoadError) -> Self {
-        LoadError::Ascii(error)
+impl From<GenerateSamplesError> for LoadError {
+    fn from(error: GenerateSamplesError) -> Self {
+        LoadError::GenerateSamples(error)
     }
 }
 
@@ -126,6 +150,7 @@ impl fmt::Display for LoadError {
         match self {
             LoadError::Ascii(e) => write!(f, "Error with ascii: {}", e),
             LoadError::MusicXML(e) => write!(f, "Error with musicxml: {}", e),
+            LoadError::GenerateSamples(e) => write!(f, "Error generating samples: {}", e),
         }
     }
 }

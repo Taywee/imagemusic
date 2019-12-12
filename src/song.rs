@@ -1,11 +1,10 @@
 use crate::base32::Base32;
 use crate::envelope::{Envelope, EnvelopePoint};
-use crate::error::{AsciiLoadError, MusicXMLLoadError};
+use crate::error::{AsciiLoadError, GenerateSamplesError, LoadError, MusicXMLLoadError};
 use crate::instrument::Instrument;
 use crate::voice::{Note, Voice, VoiceIterator};
 use minidom::Element;
 use quick_xml::Reader;
-use std::borrow::Borrow;
 use std::io::BufReader;
 use std::io::Read;
 use std::str;
@@ -24,6 +23,7 @@ pub struct Song {
 pub struct SongIterator<'a> {
     voice_iterators: Vec<VoiceIterator<'a>>,
     volume_modifier: f64,
+    voice_chord_sum: usize,
 }
 
 impl<'a> Iterator for SongIterator<'a> {
@@ -48,7 +48,7 @@ impl<'a> Iterator for SongIterator<'a> {
             self.voice_iterators.remove(removal);
         }
 
-        sample *= self.volume_modifier;
+        sample *= self.volume_modifier / self.voice_chord_sum as f64;
 
         if sample > 1.0 {
             Some(1.0)
@@ -209,7 +209,10 @@ impl Song {
                 let pitch = pitch_char.base32_decode()?;
                 // We know we have an even number of chars
                 let length = note_iter.next().unwrap().base32_decode()?;
-                notes.push(Note { pitch, length });
+                notes.push(Note {
+                    pitches: vec![pitch],
+                    length,
+                });
             }
 
             song.voices.push(Voice {
@@ -261,7 +264,7 @@ impl Song {
      */
     pub fn load_uncompressed_musicxml(source: &mut dyn Read) -> Result<Song, MusicXMLLoadError> {
         // Spawn a default song
-        let mut song = Song {
+        let song = Song {
             bps: 0.0,
             sample_rate: 0.0,
             voices: Vec::new(),
@@ -281,35 +284,32 @@ impl Song {
         Ok(song)
     }
 
-    pub fn voice_iterators(&mut self) -> Vec<VoiceIterator> {
+    pub fn voice_iterators(&self) -> Result<Vec<VoiceIterator>, LoadError> {
         self.voices
             .iter()
-            .map(|voice| VoiceIterator {
-                instrument: voice.instrument.borrow(),
-                envelope: &voice.envelope,
-                note_iterator: Box::new(voice.notes.iter()),
-                current_note: None,
-                note_samples: 0,
-                note_current_sample: 0,
-                done: false,
-                resting: false,
-                seconds_per_beat: 1.0 / self.bps,
-                sample_rate: self.sample_rate,
-                frequency: voice.start_frequency,
-                ramp: 0.0,
-                volume: voice.volume,
+            .map(|voice| {
+                VoiceIterator::new(voice, 1.0 / self.bps, self.sample_rate).map_err(LoadError::from)
             })
             .collect()
     }
 
     /** Render the song as f64 samples.
      */
-    pub fn samples(&mut self) -> SongIterator {
-        let voice_iterators = self.voice_iterators();
+    pub fn samples(&mut self) -> Result<SongIterator, LoadError> {
+        let voice_iterators = self.voice_iterators()?;
         let volume_modifier = 1.0 / (voice_iterators.len() as f64);
-        SongIterator {
+        let voice_chord_sum = self
+            .voices
+            .iter()
+            .map(|v| v.largest_chord().ok_or(GenerateSamplesError::EmptyVoice))
+            .collect::<Result<Vec<_>, _>>()?
+            .iter()
+            .map(|n| n.len())
+            .sum();
+        Ok(SongIterator {
+            voice_chord_sum,
             voice_iterators,
             volume_modifier,
-        }
+        })
     }
 }
