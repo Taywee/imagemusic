@@ -13,21 +13,26 @@ use nom::{
 
 use std::ops::RangeFrom;
 
+use nom::error::context;
 use crate::song::Song;
 
 fn parse_digits<T, E>(input: T) -> IResult<T, u64, E>
 where
-    T: AsBytes + InputLength + Slice<RangeFrom<usize>> + InputTakeAtPosition,
+    T: AsBytes + InputLength + Slice<RangeFrom<usize>> + InputTakeAtPosition + Clone,
     <T as InputTakeAtPosition>::Item: AsChar,
     E: ParseError<T>,
 {
-    let (input, sample_rate) = digit1(input)?;
+    let (new_input, sample_rate) = digit1(input.clone())?;
     let sample_rate = match std::str::from_utf8(sample_rate.as_bytes()).unwrap().parse() {
         Ok(rate) => rate,
         // TODO: use _e for context
-        Err(_e) => return Err(nom::Err::Failure(E::from_error_kind(input, ErrorKind::Digit))),
+        Err(_e) => {
+            let error = E::from_error_kind(input.clone(), ErrorKind::Digit);
+            let error = E::add_context(input, "Expected a parsable u64 number", error);
+            return Err(nom::Err::Failure(error));
+        }
     };
-    Ok((input, sample_rate))
+    Ok((new_input, sample_rate))
 }
 
 fn is_space<T: AsChar>(c: T) -> bool {
@@ -46,7 +51,7 @@ fn is_whitespace<T: AsChar + Copy>(c: T) -> bool {
 
 pub fn parse_song<T, E>(input: T) -> IResult<T, Song, E> 
 where 
-    T: AsBytes + InputLength + Slice<RangeFrom<usize>> + InputTakeAtPosition,
+    T: AsBytes + InputLength + Slice<RangeFrom<usize>> + InputTakeAtPosition + Clone,
     <T as InputTakeAtPosition>::Item: AsChar + Copy,
     E: ParseError<T>,
 {
