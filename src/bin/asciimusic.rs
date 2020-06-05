@@ -1,6 +1,6 @@
 extern crate asciimusic;
 
-use asciimusic::error::LoadError;
+use asciimusic::parser::Error;
 use asciimusic::Song;
 use std::io;
 use std::io::prelude::*;
@@ -8,7 +8,6 @@ use std::io::prelude::*;
 fn main() -> Result<(), LoadError> {
     let input = r#"
     6 48000
-    # Sawtooth, Square, Sine, Triangle
     1 0,0/1,0.005/0.75,0.01/0,-0.01 1 512 UA QA AA QA AA MA UB TB AB EB AB
     "#;
 

@@ -1,10 +1,7 @@
-use crate::base32::Base32;
 use crate::envelope::{Envelope, EnvelopePoint};
 use crate::error::{AsciiLoadError, GenerateSamplesError, LoadError, MusicXMLLoadError};
 use crate::instrument::Instrument;
 use crate::voice::{Note, Voice, VoiceIterator};
-use minidom::Element;
-use quick_xml::Reader;
 use std::io::BufReader;
 use std::io::Read;
 use std::str;
@@ -15,9 +12,9 @@ use std::str;
  * Contains the base data as well as all the voices.
  */
 pub struct Song {
-    bps: f64,
+    ticks_per_second: f32,
     voices: Vec<Voice>,
-    sample_rate: f64,
+    sample_rate: u64,
 }
 
 pub struct SongIterator<'a> {
@@ -67,8 +64,8 @@ impl Song {
     pub fn load_ascii(source: &mut dyn Read) -> Result<Song, AsciiLoadError> {
         // Spawn a default song
         let mut song = Song {
-            bps: 0.0,
-            sample_rate: 0.0,
+            ticks_per_second: 0.0,
+            sample_rate: 0,
             voices: Vec::new(),
         };
 
@@ -94,7 +91,7 @@ impl Song {
             let numbers: Result<Vec<f64>, _> = parts.iter().map(|s| s.parse()).collect();
             match numbers {
                 Ok(numbers) => {
-                    song.bps = numbers[0];
+                    song.ticks_per_second = numbers[0];
                     song.sample_rate = numbers[1];
                 }
                 Err(err) => {
@@ -265,7 +262,7 @@ impl Song {
     pub fn load_uncompressed_musicxml(source: &mut dyn Read) -> Result<Song, MusicXMLLoadError> {
         // Spawn a default song
         let song = Song {
-            bps: 0.0,
+            ticks_per_second: 0.0,
             sample_rate: 0.0,
             voices: Vec::new(),
         };
@@ -288,7 +285,7 @@ impl Song {
         self.voices
             .iter()
             .map(|voice| {
-                VoiceIterator::new(voice, 1.0 / self.bps, self.sample_rate).map_err(LoadError::from)
+                VoiceIterator::new(voice, 1.0 / self.ticks_per_second, self.sample_rate).map_err(LoadError::from)
             })
             .collect()
     }

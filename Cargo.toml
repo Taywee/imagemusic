@@ -9,12 +9,11 @@ edition = "2018"
 documentation = "https://docs.rs/asciimusic"
 homepage = "https://gitlab.com/Taywee/asciimusic"
 repository = "https://gitlab.com/Taywee/asciimusic"
-keywords = ["music", "audio", "musicxml"]
+keywords = ["music", "audio"]
 categories = ["multimedia::audio"]
 default-run = "asciimusic"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-minidom = "0.11.1"
-quick-xml = "0.16.1"
+nom = "5"
