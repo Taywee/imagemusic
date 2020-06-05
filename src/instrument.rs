@@ -1,6 +1,7 @@
 use std::f64;
+use std::fmt;
 
-pub trait Instrument {
+pub trait Instrument: fmt::Debug {
     /** Get a single sample.
      *
      * `ramp` is the frequency ramp, from 0 to 1.0, with 0 implying the beginning of a single wave
@@ -11,9 +12,13 @@ pub trait Instrument {
     fn sample(&self, ramp: f64) -> f64;
 }
 
+#[derive(Debug)]
 pub struct Sawtooth;
+#[derive(Debug)]
 pub struct Sine;
+#[derive(Debug)]
 pub struct Square;
+#[derive(Debug)]
 pub struct Triangle;
 
 impl Instrument for Sawtooth {

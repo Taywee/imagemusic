@@ -7,6 +7,6 @@ pub mod error;
 mod instrument;
 pub mod song;
 mod voice;
-mod parser;
+pub mod parser;
 
 pub use crate::song::Song;

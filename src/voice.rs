@@ -7,6 +7,7 @@ use std::borrow::Borrow;
 //const MULTIPLIER: f64 = 2.0f64.powf(1.0 / 12.0);
 const MULTIPLIER: f64 = 1.0594630943592953098431053149397484958171844482421875;
 
+#[derive(Debug)]
 pub struct Note {
     pub pitches: Vec<i8>,
     pub length: u8,
@@ -18,6 +19,7 @@ impl Note {
     }
 }
 
+#[derive(Debug)]
 pub struct Voice {
     pub volume: f64,
     pub start_frequency: f64,

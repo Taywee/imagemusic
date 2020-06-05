@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub struct EnvelopePoint {
     /// Height of the wave at this stop
     pub amplitude: f64,
@@ -8,6 +9,7 @@ pub struct EnvelopePoint {
     pub stop: f64,
 }
 
+#[derive(Debug)]
 pub struct Envelope {
     pub points: Vec<EnvelopePoint>,
 }

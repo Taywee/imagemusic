@@ -1,22 +1,21 @@
 use nom::error::ParseError;
 use std::num::ParseIntError;
 
-pub enum ErrorKind {
-    NomError(nom::error::ErrorKind),
+#[derive(Debug, PartialEq)]
+pub enum Error<I> {
+    NomError(I, nom::error::ErrorKind),
     ParseIntError(ParseIntError),
 }
 
-pub struct Error<I>(I, ErrorKind);
-
 impl<I> From<(I, nom::error::ErrorKind)> for Error<I> {
     fn from(error: (I, nom::error::ErrorKind)) -> Error<I> {
-        Error(error.0, ErrorKind::NomError(error.1))
+        Error::NomError(error.0, error.1)
     }
 }
 
-impl<I> From<(I, ParseIntError)> for Error<I> {
-    fn from(error: (I, ParseIntError)) -> Error<I> {
-        Error(error.0, ErrorKind::ParseIntError(error.1))
+impl<I> From<ParseIntError> for Error<I> {
+    fn from(error: ParseIntError) -> Error<I> {
+        Error::ParseIntError(error)
     }
 }
 
