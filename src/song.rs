@@ -1,4 +1,4 @@
-use crate::envelope::{Envelope, EnvelopePoint};
+use crate::envelope::{Envelope, Point};
 use crate::error::{AsciiLoadError, GenerateSamplesError, LoadError};
 use crate::instrument::Instrument;
 use crate::voice::{Note, Voice, VoiceIterator};
