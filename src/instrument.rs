@@ -9,6 +9,12 @@ pub enum Instrument {
     Triangle,
 }
 
+impl Default for Instrument {
+    fn default() -> Self {
+        Instrument::Sine
+    }
+}
+
 impl Instrument {
     pub fn sample(&self, ramp: f64) -> f64 {
         match self {

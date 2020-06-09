@@ -8,9 +8,12 @@ const SAMPLE_RATE: f64 = 44100.0;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Voice {
     pub volume: u8,
-    //#[serde(default = "Instrument::Sine")]
+
+    #[serde(default)]
     pub instrument: Instrument,
     pub notes: Notes,
+
+    #[serde(default)]
     pub envelope: Envelope,
 }
 

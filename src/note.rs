@@ -234,6 +234,6 @@ impl<'de> de::Deserialize<'de> for Notes {
     where
         D: de::Deserializer<'de>,
     {
-        deserializer.deserialize_i32(NotesVisitor)
+        deserializer.deserialize_str(NotesVisitor)
     }
 }

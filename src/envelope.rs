@@ -1,5 +1,10 @@
+use serde::de::{self, Error};
+use serde::ser::{self, SerializeTuple};
+use serde::{Serialize, Deserialize};
+use std::fmt;
+
 #[derive(Debug)]
-pub struct EnvelopePoint {
+pub struct Point {
     /// Height of the wave at this stop
     pub amplitude: f64,
 
@@ -9,9 +14,81 @@ pub struct EnvelopePoint {
     pub stop: f64,
 }
 
-#[derive(Debug)]
-pub struct Envelope {
-    pub points: Vec<EnvelopePoint>,
+impl ser::Serialize for Point {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: ser::Serializer,
+    {
+        let mut tup = serializer.serialize_tuple(2)?;
+        tup.serialize_element(&self.amplitude)?;
+        tup.serialize_element(&self.stop)?;
+        tup.end()
+    }
+}
+
+struct PointVisitor;
+
+impl<'de> de::Visitor<'de> for PointVisitor {
+    type Value = Point;
+
+    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("A pair of tuples")
+    }
+
+    fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+    where
+        A: de::SeqAccess<'de>
+    {
+        let amplitude: Option<f64> = seq.next_element()?;
+        let stop: Option<f64> = seq.next_element()?;
+        match (amplitude, stop) {
+            (Some(amplitude), Some(stop)) => {
+                if !(0.0..=1.0).contains(&amplitude) {
+                    return Err(A::Error::invalid_value(de::Unexpected::Float(amplitude), &"a floating point number in the range [0, 1]"));
+                }
+                Ok(Point {
+                    amplitude,
+                    stop,
+                })
+            }
+            _ => Err(A::Error::invalid_length(if let None = amplitude { 0 } else { 1 }, &"two floating point numbers")),
+        }
+    }
+}
+
+impl<'de> de::Deserialize<'de> for Point {
+    fn deserialize<D>(deserializer: D) -> Result<Point, D::Error>
+    where
+        D: de::Deserializer<'de>,
+    {
+        deserializer.deserialize_seq(PointVisitor)
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Envelope(pub Vec<Point>);
+
+impl Default for Envelope {
+    fn default() -> Self {
+        Envelope(vec![
+            Point{
+                amplitude: 0.0,
+                stop: 0.0,
+            },
+            Point{
+                amplitude: 1.0,
+                stop: 0.1,
+            },
+            Point{
+                amplitude: 0.8,
+                stop: -0.1,
+            },
+            Point{
+                amplitude: 0.0,
+                stop: -0.01,
+            },
+        ])
+    }
 }
 
 fn lerp(x: f64, a: (f64, f64), b: (f64, f64)) -> f64 {
@@ -20,18 +97,18 @@ fn lerp(x: f64, a: (f64, f64), b: (f64, f64)) -> f64 {
 
 impl Envelope {
     pub fn amplitude_at_time(&self, note_length: f64, time_point: f64) -> f64 {
-        if self.points.len() == 0 {
+        if self.0.len() == 0 {
             // This should never happen, as an empty envelope will be prevented
             panic!("An envelope should never be empty.");
         }
 
-        if self.points.len() == 1 {
-            return self.points.get(0).unwrap().amplitude;
+        if self.0.len() == 1 {
+            return self.0.get(0).unwrap().amplitude;
         }
 
         // Envelope points are made absolute here (all to time from beginning)
-        let mut points: Vec<EnvelopePoint> = self
-            .points
+        let mut points: Vec<Point> = self
+            .0
             .iter()
             .map(|point| {
                 let stop = if point.stop < 0.0 {
@@ -41,7 +118,7 @@ impl Envelope {
                     point.stop
                 };
 
-                EnvelopePoint {
+                Point {
                     amplitude: point.amplitude,
                     stop,
                 }
