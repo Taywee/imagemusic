@@ -183,6 +183,7 @@ impl ser::Serialize for Notes {
 
 struct NotesVisitor;
 
+// TODO: use is_human_readable to switch between compact and non-compact representation
 impl<'de> de::Visitor<'de> for NotesVisitor {
     type Value = Notes;
 
