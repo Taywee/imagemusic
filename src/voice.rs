@@ -1,40 +1,17 @@
 use crate::envelope::Envelope;
-use crate::error::GenerateSamplesError;
 use crate::instrument::Instrument;
-use std::borrow::Borrow;
+use crate::note::{Note, Notes};
+use serde::{Deserialize, Serialize};
 
-// Can not do this because powf is not a const function
-//const MULTIPLIER: f64 = 2.0f64.powf(1.0 / 12.0);
-const MULTIPLIER: f64 = 1.0594630943592953098431053149397484958171844482421875;
+const SAMPLE_RATE: f64 = 44100.0;
 
-#[derive(Debug)]
-pub struct Note {
-    pub pitches: Vec<i8>,
-    pub length: u8,
-}
-
-impl Note {
-    pub fn len(&self) -> usize {
-        self.pitches.len()
-    }
-}
-
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Voice {
-    pub volume: f64,
-    pub start_frequency: f64,
-    pub instrument: Box<dyn Instrument>,
-    pub notes: Vec<Note>,
+    pub volume: u8,
+    //#[serde(default = "Instrument::Sine")]
+    pub instrument: Instrument,
+    pub notes: Notes,
     pub envelope: Envelope,
-}
-
-impl Voice {
-    /**
-     * The first largest chord in the voice.
-     */
-    pub fn largest_chord<'a>(&'a self) -> Option<&'a Note> {
-        self.notes.iter().max_by_key(|note| note.len())
-    }
 }
 
 /**
@@ -44,52 +21,35 @@ impl Voice {
  * Its output should be scaled based on the voice's chord size.
  */
 pub struct VoiceIterator<'a> {
-    pub instrument: &'a dyn Instrument,
+    pub instrument: Instrument,
     pub envelope: &'a Envelope,
     pub note_iterator: Box<dyn Iterator<Item = &'a Note> + 'a>,
     pub note_samples: u64,
     pub note_current_sample: u64,
     pub done: bool,
     pub seconds_per_beat: f64,
-    pub sample_rate: f64,
 
-    // Used to calculate the next note
-    pub frequency: f64,
-    pub ramps: Vec<f64>,
+    pub ramp: f64,
     pub volume: f64,
 
     // Used to generate the current sample
-    pub frequencies: Vec<Option<f64>>,
-
-    pub largest_chord_size: usize,
+    pub frequency: Option<f64>,
 }
 
 impl<'a> VoiceIterator<'a> {
-    pub fn new(
-        voice: &'a Voice,
-        seconds_per_beat: f64,
-        sample_rate: f64,
-    ) -> Result<VoiceIterator<'a>, GenerateSamplesError> {
-        let largest_chord_size = voice
-            .largest_chord()
-            .ok_or(GenerateSamplesError::EmptyVoice)?
-            .pitches
-            .len();
-        Ok(VoiceIterator {
-            instrument: voice.instrument.borrow(),
+    pub fn new(voice: &'a Voice, seconds_per_beat: f64) -> VoiceIterator<'a> {
+        VoiceIterator {
+            instrument: voice.instrument,
             envelope: &voice.envelope,
             note_iterator: Box::new(voice.notes.iter()),
             note_samples: 0,
             note_current_sample: 0,
             done: false,
             seconds_per_beat,
-            sample_rate: sample_rate,
-            frequency: voice.start_frequency,
-            volume: voice.volume,
-            ramps: vec![0.0; largest_chord_size],
-            frequencies: vec![None; largest_chord_size],
-            largest_chord_size,
-        })
+            volume: 255.0 / voice.volume as f64,
+            ramp: 0.0,
+            frequency: None,
+        }
     }
 }
 
@@ -105,26 +65,11 @@ impl<'a> Iterator for VoiceIterator<'a> {
         if self.note_current_sample >= self.note_samples {
             self.note_current_sample = 0;
 
-            self.frequencies.clear();
-
             match self.note_iterator.next() {
                 Some(note) => {
-                    self.note_samples = (self.seconds_per_beat * self.sample_rate) as u64
-                        * (note.length as u64 + 1);
-                    // -16 is special rest value, 0 is no change, change is shifting up or down
-                    for pitch in &note.pitches {
-                        match pitch {
-                            -16 => {
-                                self.frequencies.push(None);
-                            }
-                            &pitch => {
-                                if pitch != 0 {
-                                    self.frequency *= MULTIPLIER.powi(pitch as i32);
-                                }
-                                self.frequencies.push(Some(self.frequency));
-                            }
-                        }
-                    }
+                    self.note_samples =
+                        (self.seconds_per_beat * SAMPLE_RATE) as u64 * (note.length as u64 + 1);
+                    self.frequency = note.frequency();
                 }
                 None => {
                     self.done = true;
@@ -133,31 +78,27 @@ impl<'a> Iterator for VoiceIterator<'a> {
             }
         }
 
-        // Fill with Nones if necessary
-        self.frequencies.resize(self.largest_chord_size, None);
-
         self.note_current_sample += 1;
 
         let mut sample = 0.0;
 
-        for (ramp, frequency) in self.ramps.iter_mut().zip(&self.frequencies) {
-            if let Some(frequency) = frequency {
-                *ramp += frequency;
+        if let Some(frequency) = self.frequency {
+            self.ramp += frequency;
 
-                while *ramp >= self.sample_rate {
-                    *ramp -= self.sample_rate;
-                }
-
-                sample += self.instrument.borrow().sample(*ramp / self.sample_rate)
-                    * self.volume
-                    * self.envelope.amplitude_at_time(
-                        self.note_samples as f64 / self.sample_rate,
-                        self.note_current_sample as f64 / self.sample_rate,
-                    );
-            } else {
-                *ramp = 0.0;
+            while self.ramp >= SAMPLE_RATE {
+                self.ramp -= SAMPLE_RATE;
             }
+
+            sample += self.instrument.sample(self.ramp / SAMPLE_RATE)
+                * self.volume
+                * self.envelope.amplitude_at_time(
+                    self.note_samples as f64 / SAMPLE_RATE,
+                    self.note_current_sample as f64 / SAMPLE_RATE,
+                );
+        } else {
+            self.ramp = 0.0;
         }
+
         Some(sample)
     }
 }

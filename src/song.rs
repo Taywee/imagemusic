@@ -15,7 +15,6 @@ use std::str;
 pub struct Song {
     pub(crate) ticks_per_second: u64,
     pub(crate) voices: Vec<Voice>,
-    pub(crate) sample_rate: u64,
 }
 
 pub struct SongIterator<'a> {
@@ -63,7 +62,8 @@ impl Song {
         self.voices
             .iter()
             .map(|voice| {
-                VoiceIterator::new(voice, 1.0 / self.ticks_per_second as f64, self.sample_rate as f64).map_err(LoadError::from)
+                VoiceIterator::new(voice, 1.0 / self.ticks_per_second as f64, 44100 as f64)
+                    .map_err(LoadError::from)
             })
             .collect()
     }

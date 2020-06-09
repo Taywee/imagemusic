@@ -14,6 +14,9 @@ categories = ["multimedia::audio"]
 default-run = "asciimusic"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
-nom = "5"
+regex = '1'
+
+[dependencies.serde]
+version = '1'
+features = ['derive']

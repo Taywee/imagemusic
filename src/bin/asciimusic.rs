@@ -2,11 +2,11 @@ extern crate asciimusic;
 
 use asciimusic::parser::parse_song;
 use asciimusic::Song;
+use nom::error::convert_error;
+use nom::error::VerboseError;
+use nom::IResult;
 use std::io;
 use std::io::prelude::*;
-use nom::IResult;
-use nom::error::VerboseError;
-use nom::error::convert_error;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let input = r#"

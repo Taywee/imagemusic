@@ -3,10 +3,9 @@
  */
 
 mod envelope;
-pub mod error;
 mod instrument;
+mod note;
 pub mod song;
 mod voice;
-pub mod parser;
 
 pub use crate::song::Song;
