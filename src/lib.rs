@@ -2,10 +2,10 @@
  * The main entry point to this crate is [`song::Song`](song/struct.Song.html)
  */
 
-mod envelope;
-mod instrument;
-mod note;
+pub mod envelope;
+pub mod instrument;
+pub mod note;
 pub mod song;
-mod voice;
+pub mod voice;
 
 pub use crate::song::Song;

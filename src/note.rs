@@ -139,6 +139,15 @@ impl Note {
             name => Some(16.0 * 2.0f64.powf((self.octave * 12 + name.exponent()) as f64 / 12.0)),
         }
     }
+
+    /// Get the pitch as an 8-bit integer.  0 is rest, 1 is c0, 1 is cis0...
+    pub fn pitch(self) -> u8 {
+        match self.name {
+            NoteName::Rest => 0,
+            // try an option or non-option version
+            name => (name.exponent() + self.octave as i8 * 12) as u8 + 1
+        }
+    }
 }
 
 /// Simple wrapper around a note sequence that allows for compact string-only serialization and
@@ -165,18 +174,14 @@ impl ser::Serialize for Notes {
     where
         S: ser::Serializer,
     {
-        let mut seq = Vec::new();
+        use serde::ser::{SerializeSeq, SerializeTuple};
+        let mut seq = serializer.serialize_seq(Some(self.len()))?;
         for note in self.iter() {
-            let mut s = note.length.to_string();
-            s.push_str(note.name.name());
-            if !matches!(note.name, NoteName::Rest) {
-                s.push_str(&note.octave.to_string());
-            }
-
-            seq.push(s);
+            //let mut tup = serializer.serialize_tuple(2)?;
+            seq.serialize_element(&(((note.length as u8) << 4) | note.pitch()))?;
+            //tup.end()?;
         }
-        let output = seq.join(" ");
-        serializer.serialize_str(&output)
+        seq.end()
     }
 }
 

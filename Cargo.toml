@@ -11,12 +11,14 @@ homepage = "https://gitlab.com/Taywee/asciimusic"
 repository = "https://gitlab.com/Taywee/asciimusic"
 keywords = ["music", "audio"]
 categories = ["multimedia::audio"]
-default-run = "asciimusic"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
 regex = '1'
 toml = '0.5'
+brotli = '3'
+base64 = '0.12'
+bincode = '1'
 
 [dependencies.serde]
 version = '1'

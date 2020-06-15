@@ -1,0 +1,36 @@
+# Copyright capcom from Mega Man 2
+
+ticks_per_second = 9.6
+
+[[voice]]
+notes = '''
+4g3 2r 2e3 4f3 3fis3 1g3 1r 1g3 2g3 2g3 2e3 4f3 4fis3 4g3 2r 2e3 4f3 3fis3 1g3 1r 1g3 2g3 2g3 2e3 2f3 2g5 4g5 4g3 2r 2e3 4f3 3fis3 1g3 1r 1g3 2g3 2g3 2e3 1g5 2g5 1g5 1a5 1bes5 1a5 1g5 4g3 2r 2e3 4f3 4fis3 2g5 2g5 2g5 2g5 3g5 1g5 1a5 1bes5 1a5 1g5 4d5 2r 2d5 4f5 3e5 1d5 1r 1d5 2d5 2d5 2d5 4f5 2e5 2es5 4d5 2r 2d5 4f5 3e5 1d5 1r 1d5 2d5 2d5 2d5 2r 2g5 4g5 4d5 2r 2d5 4f5 3e5 1d5 1r 1d5 2d5 2d5 2d5 4f5 2e5 2es5 4d5 2r 2d5 4f5 3e5 1d5 1r 1d5 2d5 2d5 2d5 2r 2g5 4g5 4b4 3b4 1b4 2b4 2b4 1b4 1a4 1g4 1a4 2a4 6g4 2r 2g4 2a4 2g4 4b4 3b4 1b4 2c5 2b4 2r 2d5 8d5 2r 2g5 4g5 4d5 3d5 1d5 2d5 2d5 1d5 1c5 1b4 1c5 2c5 6b4 2r 2b4 2c5 2b4 4d5 3d5 1d5 2e5 2d5 2r 2f5 8f5 2r 2g5 4g5 4g5 3g5 1g5 2g5 2g5 1g5 1e5 1d5 1e5 2e5 6d5 2r 2d5 2e5 2d5 4g5 3g5 1g5 2a5 2g5 2r 2bes5 8bes5 2r 2g5 4g5 4b5 3b5 1b5 2b5 2b5 1b5 1a5 1g5 1a5 2a5 6g5 2r 2g5 2a5 2g5 4b5 3b5 1b5 2c6 2b5 2r 2d6 8d6 1d5 1g5 1b5 1d6 1g5 1b5 1d6 1g6 4d5 2r 2d5 4f5 3e5 1d5 1r 1d5 2d5 2d5 2d5 4f5 2e5 2es5 4d5 2r 2d5 4f5 3e5 1d5 1r 1d5 2d5 2d5 2d5 2r 2g5 4g5 4d5 2r 2d5 4f5 3e5 1d5 1r 1d5 2d5 2d5 2d5 4f5 2e5 2es5 4d5 2r 2d5 4f5 3e5 1d5 1r 1d5 2d5 2d5 2d5 2r 2g5 4g5 4e5 3e5 1e5 2e5 4c5 2e5 8d5 2c5 2c5 1c5 2d5 1d5 4e5 3e5 1e5 2e5 4c5 2e5 8d5 2c5 2c5 1c5 2d5 1d5 4e5 3e5 1e5 2e5 4c5 2e5 8d5 2c5 2c5 1c5 2d5 1d5 4e5 3e5 1e5 2e5 4g5 2e5 1d5 2d5 1g5 2g5 1b5 1b5 8r 4d5 2r 2d5 4f5 3e5 1d5 1r 1d5 2d5 2d5 2d5 4f5 2e5 2es5 4d5 2r 2d5 4f5 3e5 1d5 1r 1d5 2d5 2d5 2d5 2r 2g5 4g5
+'''
+instrument = "Sawtooth"
+
+[[voice]]
+notes = '''
+16r 16r 16r 16r 16r 16r 16r 16r 16r 16r 16r 16r 16r 16r 16r 16r 2d5 2b4 2d5 1b4 1d5 1b4 3g5 2d5 1b4 1d5 1r 1d5 2b4 2d5 1b4 1d5 1r 1g5 1d5 1b4 1d5 1b4 1g4 1d4 2d5 2b4 2d5 1b4 1d5 1r 3g5 2d5 1b4 1d5 1r 1d5 2b4 2d5 2b4 4g5 4r 2d5 2b4 2d5 1b4 1d5 1r 1d5 2g5 2d5 1b4 1d5 1r 1d5 2b4 2d5 1b4 1d5 1r 1g5 1d5 1b4 1d5 1b4 1g4 1d4 2d5 2b4 2d5 1b4 1d5 1r 1d5 2g5 2d5 1b4 1d5 1r 1d5 2b4 2d5 2b4 4g5 4r 2d5 2b4 2d5 1b4 1d5 1r 1d5 2g5 2d5 1b4 1d5 1r 1d5 2b4 2d5 1b4 1d5 1r 1g5 1d5 1b4 1d5 1b4 1g4 1d4 2d5 2b4 2d5 1b4 1d5 1r 1d5 2g5 2d5 1b4 1d5 1r 1d5 2b4 2d5 2b4 4g5 4r 2d5 2b4 2d5 1b4 1d5 1r 1d5 2g5 2d5 1b4 1d5 1r 1d5 2b4 2d5 1b4 1d5 1r 1g5 1d5 1b4 1d5 1b4 1g4 1d4 2d5 2b4 2d5 1b4 1d5 1r 1d5 2g5 2d5 1b4 1d5 1r 1d5 2b4 2d5 2b4 4g5 4r 16r 16r 16r 16r 16r 16r 16r 16r 16r 16r 16r 16r 16r 16r 16r 16r 16r 16r 16r 16r
+'''
+instrument = "Sawtooth"
+
+[[voice]]
+notes = '''
+16r 8r 2r 2f5 2r 2fis5 16r 8r 2r 2f5 2r 2fis5 16r 8r 2r 2f5 2r 2fis5 8r 4r 2r 2g4 2g4 2g4 2g4 2g4 4g4 4r 4g4 2r 2e4 4f4 3fis4 1g4 1r 1g4 2g4 2g4 2e4 2f4 2f5 2fis4 2fis5 4g4 2r 2e4 4f4 3fis4 1g4 1r 1g4 2g4 2g4 2e4 2f4 2f5 2fis4 2fis5 4g4 2r 2e4 4f4 3fis4 1g4 1r 1g4 2g4 2g4 2e4 2f4 2f5 2fis4 2fis5 4g4 2r 2e4 4f4 3fis4 1g4 1r 1g4 2g4 2g4 2e4 2f4 2f5 2fis4 2fis5 4g4 2r 2e4 4f4 3fis4 1g4 1r 1g4 2g4 2g4 2e4 4f4 4fis4 4g4 2r 2e4 4f4 3fis4 1g4 1r 1g4 2g4 2g4 2e4 2f4 2f5 2fis4 2fis5 4g4 2r 2e4 4f4 3fis4 1g4 1r 1g4 2g4 2g4 2e4 4f4 4fis4 4g4 2r 2e4 4f4 3fis4 1g4 1r 1g4 2g4 2g4 2e4 2f4 2f5 2fis4 2fis5 4g4 2r 2e4 4f4 3fis4 1g4 1r 1g4 2g4 2g4 2e4 4f4 4fis4 4g4 2r 2e4 4f4 3fis4 1g4 1r 1g4 2g4 2g4 2e4 2f4 2f5 2fis4 2fis5 4g4 2r 2e4 4f4 3fis4 1g4 1r 1g4 2g4 2g4 2e4 4f4 4fis4 4g4 2r 2e4 4f4 3fis4 1g4 1r 1g4 2g4 2g4 2e4 2f4 2f5 2fis4 2fis5 4g4 2r 2e4 4f4 3fis4 1g4 1r 1g4 2g4 2g4 2e4 2f4 2f5 2fis4 2fis5 4g4 2r 2e4 4f4 3fis4 1g4 1r 1g4 2g4 2g4 2e4 2f4 2f5 2fis4 2fis5 4g4 2r 2e4 4f4 3fis4 1g4 1r 1g4 2g4 2g4 2e4 2f4 2f5 2fis4 2fis5 4g4 2r 2e4 4f4 3fis4 1g4 1r 1g4 2g4 2g4 2e4 2f4 2f5 2fis4 2fis5 3a4 1c5 2r 2e5 1r 1e5 1c5 1a4 1c5 1a4 1c5 1e5 3g4 1b4 2r 2d5 2r 1r 1c5 3b4 1b4 3a4 1c5 2r 2e5 1r 1e5 1c5 1a4 1c5 1a4 1c5 1e5 3g4 1b4 2r 2d5 2r 1r 1c5 3b4 1b4 3a4 1c5 2r 2e5 1r 1e5 1c5 1a4 1c5 1a4 1c5 1e5 3g4 1b4 2r 2d5 2r 1r 1c5 3b4 1b4 3a4 1c5 2r 2e5 1r 1e5 1c5 1a4 1c5 1a4 1c5 1e5 1b4 2b4 1d5 2d5 1g5 1g5 8r 4g4 2r 2e4 4f4 3fis4 1g4 1r 1g4 2g4 2g4 2e4 2f4 2f5 2fis4 2fis5 4g4 2r 2e4 4f4 3fis4 1g4 1r 1g4 2g4 2g4 2e4 2f4 2f5 4fis4
+'''
+instrument = "Sawtooth"
+
+#[[voices]]
+#volume = 255
+#notes = '4d4 2a3 6b3'
+#instrument = "Sine"
+
+#[[voices]]
+#volume = 255
+#notes = '4b3'
+#instrument = "Sine"
+
+#[[voices]]
+#volume = 255
+#notes = '4g3'
+#instrument = "Sine"

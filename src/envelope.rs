@@ -20,8 +20,8 @@ impl ser::Serialize for Point {
         S: ser::Serializer,
     {
         let mut tup = serializer.serialize_tuple(2)?;
-        tup.serialize_element(&self.amplitude)?;
-        tup.serialize_element(&self.stop)?;
+        tup.serialize_element(&((self.amplitude * 255.0) as u8))?;
+        tup.serialize_element(&((self.stop / 100.0) as i8))?;
         tup.end()
     }
 }
@@ -77,11 +77,11 @@ impl Default for Envelope {
             },
             Point{
                 amplitude: 1.0,
-                stop: 0.1,
+                stop: 0.05,
             },
             Point{
                 amplitude: 0.8,
-                stop: -0.1,
+                stop: -0.05,
             },
             Point{
                 amplitude: 0.0,

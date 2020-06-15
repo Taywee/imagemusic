@@ -1,21 +1,21 @@
 ticks_per_second = 4
 
-[[voices]]
+[[voice]]
 volume = 255
 notes = '2d5 1g4 1a4 1b4 1c5 2d5 2g4 2g4'
 instrument = "Sine"
 
-[[voices]]
+[[voice]]
 volume = 255
 notes = '4d4 2a3 6b3'
 instrument = "Sine"
 
-[[voices]]
+[[voice]]
 volume = 255
 notes = '4b3'
 instrument = "Sine"
 
-[[voices]]
+[[voice]]
 volume = 255
 notes = '4g3'
 instrument = "Sine"

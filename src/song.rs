@@ -15,8 +15,9 @@ use serde::{Serialize, Deserialize};
  */
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Song {
-    pub(crate) ticks_per_second: u64,
-    pub(crate) voices: Vec<Voice>,
+    pub(crate) ticks_per_second: f32,
+    #[serde(rename = "voice")]
+    pub voices: Vec<Voice>,
 }
 
 pub struct SongIterator<'a> {

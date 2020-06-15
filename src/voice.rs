@@ -5,8 +5,13 @@ use serde::{Deserialize, Serialize};
 
 const SAMPLE_RATE: f64 = 44100.0;
 
+fn default_volume() -> u8 {
+    u8::MAX
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Voice {
+    #[serde(default = "default_volume")]
     pub volume: u8,
 
     #[serde(default)]
@@ -21,7 +26,6 @@ pub struct Voice {
  * Iterate through all the samples in a voice.
  *
  * This does not return a bound value.
- * Its output should be scaled based on the voice's chord size.
  */
 pub struct VoiceIterator<'a> {
     pub instrument: Instrument,
