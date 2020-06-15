@@ -16,6 +16,7 @@ default-run = "asciimusic"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
 regex = '1'
+toml = '0.5'
 
 [dependencies.serde]
 version = '1'

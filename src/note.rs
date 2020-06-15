@@ -4,10 +4,6 @@ use serde::ser;
 use std::fmt;
 use std::ops::{Deref, DerefMut};
 
-// Can not do this because powf is not a const function
-//const MULTIPLIER: f64 = 2.0f64.powf(1.0 / 12.0);
-const MULTIPLIER: f64 = 1.0594630943592953098431053149397484958171844482421875;
-
 /// -is is sharp -es is flat
 #[derive(Debug, Clone, Copy)]
 pub enum NoteName {
@@ -37,6 +33,7 @@ pub enum NoteName {
 
 impl NoteName {
     pub fn exponent(self) -> i8 {
+        use NoteName::*;
         match self {
             Rest => panic!(),
             Ces => -1,
@@ -64,6 +61,7 @@ impl NoteName {
     }
 
     pub fn name(self) -> &'static str {
+        use NoteName::*;
         match self {
             Rest => "r",
             Ces => "ces",
@@ -98,29 +96,30 @@ impl std::str::FromStr for NoteName {
     type Err = NoSuchNoteName;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
+        use NoteName::*;
         Ok(match s {
-            "r" => NoteName::Rest,
-            "ces" => NoteName::Ces,
-            "c" => NoteName::C,
-            "cis" => NoteName::Cis,
-            "des" => NoteName::Des,
-            "d" => NoteName::D,
-            "dis" => NoteName::Dis,
-            "es" => NoteName::Es,
-            "e" => NoteName::E,
-            "eis" => NoteName::Eis,
-            "fes" => NoteName::Fes,
-            "f" => NoteName::F,
-            "fis" => NoteName::Fis,
-            "ges" => NoteName::Ges,
-            "g" => NoteName::G,
-            "gis" => NoteName::Gis,
-            "as" => NoteName::As,
-            "a" => NoteName::A,
-            "ais" => NoteName::Ais,
-            "bes" => NoteName::Bes,
-            "b" => NoteName::B,
-            "bis" => NoteName::Bis,
+            "r" => Rest,
+            "ces" => Ces,
+            "c" => C,
+            "cis" => Cis,
+            "des" => Des,
+            "d" => D,
+            "dis" => Dis,
+            "es" => Es,
+            "e" => E,
+            "eis" => Eis,
+            "fes" => Fes,
+            "f" => F,
+            "fis" => Fis,
+            "ges" => Ges,
+            "g" => G,
+            "gis" => Gis,
+            "as" => As,
+            "a" => A,
+            "ais" => Ais,
+            "bes" => Bes,
+            "b" => B,
+            "bis" => Bis,
             _ => return Err(NoSuchNoteName),
         })
     }
