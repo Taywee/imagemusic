@@ -1,0 +1,18 @@
+# Copyright Game Freak and Nintendo, from Pokemon Red and Blue
+
+ticks_per_second = 30
+
+[[voice]]
+notes = '''
+24c5 6r 2r 4c5 4c5 4c5 4c5 6c5 2r 4bes4 12c5 3c5 3r 2r 4c5 4c5 4c5 4c5 6c5 2r 4bes4 12c5 6c5 2r 4c5 4c5 4c5 4c5 6c5 3g4 3g4 6g4 3g4 3g4 6g4 3g4 3g4 6g4 6g4 12c5 12g4 6g4 3r 3c5 3c5 3d5 3e5 3f5 24g5 6r 6g5 4g5 4as5 4bes5 24c6 4c6 4c6 4c6 4c6 4bes5 4as5 4bes5 4r 4as5 24g5 12g5 6f5 3f5 3g5 24as5 6g5 6f5 6es5 3es5 3f5 24g5 6f5 6es5 6d5 3d5 3e5 24fes5 12a5 6g5 3g4 3g4 6g4 3g4 3g4 6g4 3g4 3g4 6g4 6g4 12c5 12g4 6g4 3r 3c5 3c5 3d5 3e5 3f5 24g5 6r 6g5 4g5 4as5 4bes5 36c6 12es6 12d6 24b5 12g5 36as5 12c6 12b5 24g5 12g5 24as5 12r 12c6 12b5 24g5 12e5 24f5 12r 12as5 12g5 24es5 12c5 6d5 3d5 3e5 24fes5 12a5 6g5 3g4 3g4 6g4 3g4 3g4 6g4 3g4 3g4 6g4 6g4
+'''
+
+[[voice]]
+notes = '''
+24e4 6r 2r 4e4 4e4 4e4 4e4 6d4 2r 4d4 24d4 4d4 4d4 4d4 6es4 2r 4es4 12es4 6es4 2r 4es4 4es4 4es4 4es4 6es4 3b3 3b3 6b3 3b3 3b3 6b3 3b3 3b3 6b3 6b3 12e4 4e4 4e4 4d4 9e4 3e4 3e4 3f4 3g4 3a4 9bes4 3c5 3c5 3d5 3e5 3f5 6g5 6g5 4bes4 4c5 4d5 9es5 3as4 3as4 3bes4 3c5 3d5 6es5 6es5 4es5 4d5 4c5 4es5 4r 4bes4 4bes4 4bes4 4as4 4bes4 4r 4bes4 4bes4 4as4 4bes4 6as4 2r 2as4 2g4 6as4 2as4 2as4 2bes4 12c5 6bes4 6as4 6r 2r 2g4 2f4 6g4 2g4 2g4 2as4 12bes4 6as4 6g4 12fes4 9fes4 3g4 6a4 2a4 2a4 2b4 6c5 6d5 6b4 3b3 3b3 6b3 3b3 3b3 6b3 3b3 3b3 6b3 6b3 12e4 4e4 4e4 4d4 9e4 3e4 3e4 3f4 3g4 3a4 9bes4 3c5 3c5 3d5 3e5 3f5 6g5 6g5 4bes4 4c5 4d5 36es5 12fes5 12f5 24d5 12b4 36des5 12es5 12d5 24b4 12b4 24des5 12r 12es5 12d5 24b4 12b4 24as4 12r 12des5 12c5 24g4 12es4 12fes4 9fes4 3g4 6a4 2a4 2a4 2b4 6c5 6d5 6b4 3b3 3b3 6b3 3b3 3b3 6b3 3b3 3b3 6b3 6b3
+'''
+
+[[voice]]
+notes = '''
+12bes2 4bes2 4bes2 4bes2 12bes2 4bes2 4bes2 4bes2 12as2 4as2 4as2 4as2 12as2 4as2 4as2 4as2 12fes2 4fes2 4fes2 4fes2 12fes2 4fes2 4fes2 4fes2 12fes2 12f2 12f2 6g2 6a2 12bes2 4bes2 4bes2 4as2 12bes2 12bes2 12as2 4as2 4as2 4fes2 12as2 12as2 12fes2 4fes2 4fes2 4e2 12fes2 12fes2 12des3 4des3 4des3 4b2 12des3 12des3 12b2 4b2 4b2 4bes2 12b2 4b2 4b2 4b2 12bes2 4bes2 4bes2 4as2 12bes2 4bes2 4bes2 4bes2 12c3 4c3 4c3 4bes2 12c3 4c3 4c3 4c3 12f2 12f2 12f2 6g2 6a2 12bes2 4bes2 4bes2 4as2 12bes2 12bes2 12as2 4as2 4as2 4fes2 12as2 12as2 12fes2 4fes2 4fes2 4e2 12fes2 12fes2 12f2 4f2 4f2 4es2 12f2 12f2 4e2 4bes2 4des3 4e3 4bes3 4des4 12e4 12r 12f4 4f2 4f2 4f2 12f2 12r 4e2 4bes2 4des3 4e3 4bes3 4des4 12e4 12r 12f4 4f2 4f2 4f2 12f2 12r 12b2 4b2 4b2 4bes2 12b2 4b2 4b2 4b2 12bes2 4bes2 4bes2 4as2 12bes2 4bes2 4bes2 4bes2 12c3 4c3 4c3 4c3 12c3 4c3 4c3 4c3 12f2 12f2 12f2 6g2 6a2
+'''
