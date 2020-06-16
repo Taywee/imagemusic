@@ -43,7 +43,7 @@ def main():
                                 for i in range(1, -alter):
                                     suffix += 'es'
                             else:
-                                suffix = ''.join('es' for i in range(alter))
+                                suffix = ''.join('is' for i in range(alter))
 
                             notes.append(f'{duration}{step}{suffix}{octave}')
         print('[[voice]]')

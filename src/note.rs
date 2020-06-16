@@ -199,7 +199,7 @@ impl<'de> de::Visitor<'de> for NotesVisitor {
     where
         E: de::Error,
     {
-        let note_pattern = Regex::new(r"^(\d+)(r|([a-g](?:[ie]s)?)(\d+))$").unwrap();
+        let note_pattern = Regex::new(r"^(\d+)(r|([a-g](?:[ie]?s)*)(\d+))$").unwrap();
 
         let notes: Vec<Note> = value
             .lines()
