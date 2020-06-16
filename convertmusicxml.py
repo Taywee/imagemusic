@@ -18,10 +18,28 @@ def main():
 
     for part in root.findall('part'):
         notes = []
+        tieduration = 0
         for measure in part.findall('measure'):
             for note in measure.findall('note'):
                 duration = int(note.find('duration').text)
                 rest = note.find('rest') is not None
+                tie = set(tie.attrib['type'] for tie in note.findall('tie'))
+                if 'start' in tie and 'stop' in tie:
+                    # continuation
+                    tieduration += duration
+                    continue
+                elif 'stop' in tie:
+                    duration += tieduration
+                    tieduriation = 0
+                elif 'start' in tie:
+                    tieduration = duration
+                    continue
+
+                tie.discard('start')
+                tie.discard('stop')
+                if tie:
+                    raise RuntimeError(f'tie had unknown attribute: {tie!r}')
+
                 if rest:
                     notes.append(f'{duration}r')
                 else:
