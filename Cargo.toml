@@ -1,6 +1,6 @@
 [package]
 name = "asciimusic"
-description = "Simple and fun, but largely useless, program and library for processing a base32-based text format to audio output"
+description = "Simple and fun, but largely useless, program and library for processing a compressed and encoded text string to audio output"
 license = "MIT"
 readme = "README.md"
 version = "0.1.3"
@@ -19,6 +19,8 @@ toml = '0.5'
 brotli = '3'
 base64 = '0.12'
 bincode = '1'
+rust-lzma = '0.5'
+zstd = '0.5'
 
 [dependencies.serde]
 version = '1'

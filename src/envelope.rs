@@ -21,7 +21,7 @@ impl ser::Serialize for Point {
     {
         let mut tup = serializer.serialize_tuple(2)?;
         tup.serialize_element(&((self.amplitude * 255.0) as u8))?;
-        tup.serialize_element(&((self.stop / 100.0) as i8))?;
+        tup.serialize_element(&((self.stop * 100.0) as i8))?;
         tup.end()
     }
 }
@@ -39,20 +39,16 @@ impl<'de> de::Visitor<'de> for PointVisitor {
     where
         A: de::SeqAccess<'de>
     {
-        let amplitude: Option<f64> = seq.next_element()?;
-        let stop: Option<f64> = seq.next_element()?;
-        match (amplitude, stop) {
-            (Some(amplitude), Some(stop)) => {
-                if !(0.0..=1.0).contains(&amplitude) {
-                    return Err(A::Error::invalid_value(de::Unexpected::Float(amplitude), &"a floating point number in the range [0, 1]"));
-                }
-                Ok(Point {
-                    amplitude,
-                    stop,
-                })
-            }
-            _ => Err(A::Error::invalid_length(if let None = amplitude { 0 } else { 1 }, &"two floating point numbers")),
-        }
+        let amplitude: Option<u8> = seq.next_element()?;
+        let amplitude = amplitude.ok_or_else(|| A::Error::invalid_length(0, &self))?;
+        let stop: Option<i8> = seq.next_element()?;
+        let stop = stop.ok_or_else(|| A::Error::invalid_length(1, &self))?;
+        let amplitude = amplitude as f64 / 255.0;
+        let stop = stop as f64 / 100.0;
+        Ok(Point {
+            amplitude,
+            stop,
+        })
     }
 }
 
@@ -61,7 +57,7 @@ impl<'de> de::Deserialize<'de> for Point {
     where
         D: de::Deserializer<'de>,
     {
-        deserializer.deserialize_seq(PointVisitor)
+        deserializer.deserialize_tuple(2, PointVisitor)
     }
 }
 
