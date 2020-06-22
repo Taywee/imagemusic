@@ -102,11 +102,12 @@ impl Envelope {
             return self.0.get(0).unwrap().amplitude;
         }
 
-        // Envelope points are made absolute here (all to time from beginning)
+        // Envelope points are made absolute here (all to time from beginning).  Also remove points
+        // with a stop outside the note's range.
         let mut points: Vec<Point> = self
             .0
             .iter()
-            .map(|point| {
+            .filter_map(|point| {
                 let stop = if point.stop < 0.0 {
                     // Negative, so will subtract
                     note_length + point.stop
@@ -114,15 +115,25 @@ impl Envelope {
                     point.stop
                 };
 
-                Point {
+                Some(Point {
                     amplitude: point.amplitude,
                     stop,
-                }
+                }).filter(|p| (0.0..=note_length).contains(&p.stop))
             })
             .collect();
 
-        // Sort the points
-        points.sort_by(|a, b| a.stop.partial_cmp(&b.stop).unwrap());
+        let mut lastmax = -1.0;
+        // Remove out-of-order stops.  This may cause buggy results, but less buggy results than
+        // simple sorting.
+        //points.sort_by(|a, b| a.stop.partial_cmp(&b.stop).unwrap());
+        points.retain(move |point| 
+            if point.stop > lastmax {
+                lastmax = point.stop;
+                true
+            } else {
+                false
+            }
+        );
 
         // Can probably make all of this much nicer.
         if points.first().unwrap().stop >= time_point {
@@ -130,7 +141,7 @@ impl Envelope {
         } else if points.last().unwrap().stop <= time_point {
             points.last().unwrap().amplitude
         } else {
-            for i in 1..(points.len() - 1) {
+            for i in 1..points.len() {
                 let first = points.get(i - 1).unwrap();
                 let second = points.get(i).unwrap();
                 if first.stop <= time_point && time_point <= second.stop {
@@ -142,15 +153,7 @@ impl Envelope {
                 }
             }
 
-            // on last branch: last two points
-            let last_index = points.len() - 1;
-            let first = points.get(last_index - 1).unwrap();
-            let second = points.get(last_index).unwrap();
-            lerp(
-                time_point,
-                (first.stop, first.amplitude),
-                (second.stop, second.amplitude),
-            )
+            unreachable!();
         }
     }
 }

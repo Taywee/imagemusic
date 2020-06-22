@@ -11,7 +11,7 @@ pub enum Instrument {
 
 impl Default for Instrument {
     fn default() -> Self {
-        Instrument::Sine
+        Instrument::Square
     }
 }
 

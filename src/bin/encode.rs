@@ -1,22 +1,21 @@
 extern crate asciimusic;
 
 use asciimusic::Song;
-use std::io::BufWriter;
 use std::io::prelude::*;
 use std::env;
 use std::fs;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().skip(1).collect();
-    if args.len() < 2 {
-        panic!("asciimusic {input song} {output pcm}");
+    if args.len() < 1 {
+        panic!("asciimusic {input song}");
     }
-    let (songpath, outputpath) = (&args[0], &args[1]);
+    let songpath = &args[0];
     let song_toml = fs::read_to_string(songpath)?;
-    let mut song: Song = toml::from_str(&song_toml)?;
-    let mut bincode = bincode::serialize(&song)?;
+    let song: Song = toml::from_str(&song_toml)?;
+    let bincode = bincode::serialize(&song)?;
     println!("Song bincode: {}", bincode.len());
-    let mut song: Song = bincode::deserialize(&bincode)?;
+    let song: Song = bincode::deserialize(&bincode)?;
     println!("Song: {:#?}", song);
     let mut compressor = brotli::CompressorReader::new(bincode.as_slice(), 4096, 11, 21);
     let mut compressed = Vec::new();

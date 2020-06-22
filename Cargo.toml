@@ -19,8 +19,6 @@ toml = '0.5'
 brotli = '3'
 base64 = '0.12'
 bincode = '1'
-rust-lzma = '0.5'
-zstd = '0.5'
 
 [dependencies.serde]
 version = '1'

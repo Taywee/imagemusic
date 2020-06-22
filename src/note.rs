@@ -3,9 +3,11 @@ use serde::de;
 use serde::ser;
 use std::fmt;
 use std::ops::{Deref, DerefMut};
+use serde::{Serialize, Deserialize};
+use std::num::NonZeroU8;
 
 /// -is is sharp -es is flat
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum NoteName {
     Rest,
     C,
@@ -218,29 +220,19 @@ impl Note {
         }
     }
 
-    /// Get the pitch as an 8-bit integer.  0 is rest, 1 is c0, 1 is cis0...
-    pub fn pitch(self) -> u8 {
+    /// Get the pitch as an 8-bit integer.  None is rest, Some(0) is c0, Some(1) is cis0...
+    pub fn pitch(self) -> Option<u8> {
         match self.name {
-            NoteName::Rest => 0,
-            // try an option or non-option version
-            name => (name.exponent() + self.octave as i8 * 12) as u8 + 1
+            NoteName::Rest => None,
+            name => Some((name.exponent() + self.octave as i8 * 12) as u8)
         }
     }
 
-    pub fn from_length_pitch(length: u8, pitch: u8) -> Self {
-        if pitch == 0 {
-            Note {
-                length,
-                name: NoteName::Rest,
-                octave: 0,
-            }
-        } else {
-            let pitch = pitch - 1;
-            Note {
-                length,
-                name: NoteName::from_pitch(pitch % 12),
-                octave: pitch / 12,
-            }
+    pub fn from_length_pitch(length: u8, pitch: Option<u8>) -> Self {
+        Note {
+            length,
+            name: pitch.map(|pitch| NoteName::from_pitch(pitch % 12)).unwrap_or(NoteName::Rest),
+            octave: pitch.unwrap_or(0) / 12,
         }
     }
 }
@@ -262,7 +254,7 @@ impl ser::Serialize for Note {
             use serde::ser::SerializeTuple;
             let mut tuple = serializer.serialize_tuple(2)?;
             tuple.serialize_element(&self.length)?;
-            tuple.serialize_element(&self.pitch())?;
+            tuple.serialize_element(&self.pitch().unwrap_or(0))?;
             tuple.end()
         }
     }
@@ -324,6 +316,12 @@ impl<'de> de::Visitor<'de> for BinNoteVisitor {
         let length = length.ok_or_else(|| A::Error::invalid_length(0, &self))?;
         let pitch: Option<u8> = seq.next_element()?;
         let pitch = pitch.ok_or_else(|| A::Error::invalid_length(1, &self))?;
+
+        let pitch = if pitch == 0 {
+            None
+        } else {
+            Some(pitch)
+        };
 
         Ok(Note::from_length_pitch(length, pitch))
     }
@@ -427,7 +425,7 @@ impl<'de> de::Visitor<'de> for BinNotesVisitor {
     {
         let mut output = Vec::new();
         loop {
-            let note: Option<Note> = dbg!(seq.next_element())?;
+            let note: Option<Note> = seq.next_element()?;
             match note {
                 Some(note) => output.push(note),
                 None => break,
