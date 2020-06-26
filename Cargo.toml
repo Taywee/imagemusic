@@ -20,6 +20,11 @@ brotli = '3'
 base64 = '0.12'
 bincode = '1'
 
+
+[dependencies.rand]
+version = '0.7'
+features = ['small_rng']
+
 [dependencies.serde]
 version = '1'
 features = ['derive']

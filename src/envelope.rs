@@ -3,15 +3,15 @@ use serde::ser::{self, SerializeTuple};
 use serde::{Serialize, Deserialize};
 use std::fmt;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
 pub struct Point {
-    /// Height of the wave at this stop
-    pub amplitude: f64,
-
     /// Stop point in seconds.  May be positive to be distance from the beginning and negative to
     /// be distance from the end.  If these overlap, the envelope will change shape in ways that
     /// may be unpredictable, because they will reorder automatically.
     pub stop: f64,
+
+    /// Height of the wave at this stop
+    pub amplitude: f64,
 }
 
 impl ser::Serialize for Point {
@@ -20,8 +20,8 @@ impl ser::Serialize for Point {
         S: ser::Serializer,
     {
         let mut tup = serializer.serialize_tuple(2)?;
-        tup.serialize_element(&((self.amplitude * 255.0) as u8))?;
         tup.serialize_element(&((self.stop * 100.0) as i8))?;
+        tup.serialize_element(&((self.amplitude * 255.0) as u8))?;
         tup.end()
     }
 }
@@ -39,15 +39,15 @@ impl<'de> de::Visitor<'de> for PointVisitor {
     where
         A: de::SeqAccess<'de>
     {
-        let amplitude: Option<u8> = seq.next_element()?;
-        let amplitude = amplitude.ok_or_else(|| A::Error::invalid_length(0, &self))?;
         let stop: Option<i8> = seq.next_element()?;
         let stop = stop.ok_or_else(|| A::Error::invalid_length(1, &self))?;
-        let amplitude = amplitude as f64 / 255.0;
+        let amplitude: Option<u8> = seq.next_element()?;
+        let amplitude = amplitude.ok_or_else(|| A::Error::invalid_length(0, &self))?;
         let stop = stop as f64 / 100.0;
+        let amplitude = amplitude as f64 / 255.0;
         Ok(Point {
-            amplitude,
             stop,
+            amplitude,
         })
     }
 }
@@ -61,32 +61,33 @@ impl<'de> de::Deserialize<'de> for Point {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct Envelope(pub Vec<Point>);
 
 impl Default for Envelope {
     fn default() -> Self {
         Envelope(vec![
             Point{
-                amplitude: 0.0,
                 stop: 0.0,
-            },
-            Point{
-                amplitude: 1.0,
-                stop: 0.05,
-            },
-            Point{
-                amplitude: 0.8,
-                stop: -0.05,
-            },
-            Point{
                 amplitude: 0.0,
+            },
+            Point{
+                stop: 0.05,
+                amplitude: 1.0,
+            },
+            Point{
+                stop: -0.05,
+                amplitude: 0.8,
+            },
+            Point{
                 stop: -0.01,
+                amplitude: 0.0,
             },
         ])
     }
 }
 
+#[inline]
 fn lerp(x: f64, a: (f64, f64), b: (f64, f64)) -> f64 {
     a.1 + (x - a.0) * (b.1 - a.1) / (b.0 - a.0)
 }
