@@ -1,10 +1,9 @@
 use regex::Regex;
 use serde::de;
 use serde::ser;
+use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::ops::{Deref, DerefMut};
-use serde::{Serialize, Deserialize};
-use std::num::NonZeroU8;
 
 /// -is is sharp -es is flat
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
@@ -216,7 +215,9 @@ impl Note {
     pub fn frequency(self) -> Option<f64> {
         match self.name {
             NoteName::Rest => None,
-            name => Some(16.0 * 2.0f64.powf((self.octave as i8 * 12 + name.exponent()) as f64 / 12.0)),
+            name => {
+                Some(16.0 * 2.0f64.powf((self.octave as i8 * 12 + name.exponent()) as f64 / 12.0))
+            }
         }
     }
 
@@ -224,14 +225,16 @@ impl Note {
     pub fn pitch(self) -> Option<u8> {
         match self.name {
             NoteName::Rest => None,
-            name => Some((name.exponent() + self.octave as i8 * 12) as u8)
+            name => Some((name.exponent() + self.octave as i8 * 12) as u8),
         }
     }
 
     pub fn from_length_pitch(length: u8, pitch: Option<u8>) -> Self {
         Note {
             length,
-            name: pitch.map(|pitch| NoteName::from_pitch(pitch % 12)).unwrap_or(NoteName::Rest),
+            name: pitch
+                .map(|pitch| NoteName::from_pitch(pitch % 12))
+                .unwrap_or(NoteName::Rest),
             octave: pitch.unwrap_or(0) / 12,
         }
     }
@@ -278,23 +281,25 @@ impl<'de> de::Visitor<'de> for StrNoteVisitor {
     where
         E: de::Error,
     {
-        let note = NOTE_PATTERN.with(|note_pattern| {
-            note_pattern.captures(value).map(|captures| {
-                let length: u8 = captures.get(1).unwrap().as_str().parse().unwrap();
-                let (name, octave) = match captures.get(2).unwrap().as_str() {
-                    "r" => (NoteName::Rest, 0),
-                    _ => (
-                        captures.get(3).unwrap().as_str().parse().unwrap(),
-                        captures.get(4).unwrap().as_str().parse().unwrap(),
-                    ),
-                };
-                Note {
-                    length,
-                    name,
-                    octave,
-                }
+        let note = NOTE_PATTERN
+            .with(|note_pattern| {
+                note_pattern.captures(value).map(|captures| {
+                    let length: u8 = captures.get(1).unwrap().as_str().parse().unwrap();
+                    let (name, octave) = match captures.get(2).unwrap().as_str() {
+                        "r" => (NoteName::Rest, 0),
+                        _ => (
+                            captures.get(3).unwrap().as_str().parse().unwrap(),
+                            captures.get(4).unwrap().as_str().parse().unwrap(),
+                        ),
+                    };
+                    Note {
+                        length,
+                        name,
+                        octave,
+                    }
+                })
             })
-        }).ok_or_else(|| de::Error::invalid_value(de::Unexpected::Str(value), &self))?;
+            .ok_or_else(|| de::Error::invalid_value(de::Unexpected::Str(value), &self))?;
 
         Ok(note)
     }
@@ -317,11 +322,7 @@ impl<'de> de::Visitor<'de> for BinNoteVisitor {
         let pitch: Option<u8> = seq.next_element()?;
         let pitch = pitch.ok_or_else(|| A::Error::invalid_length(1, &self))?;
 
-        let pitch = if pitch == 0 {
-            None
-        } else {
-            Some(pitch)
-        };
+        let pitch = if pitch == 0 { None } else { Some(pitch) };
 
         Ok(Note::from_length_pitch(length, pitch))
     }
@@ -404,9 +405,7 @@ impl<'de> de::Visitor<'de> for StrNotesVisitor {
             })
             // Join all lines
             .flatten()
-            .map(move |s| {
-                StrNoteVisitor.visit_str(s)
-            })
+            .map(move |s| StrNoteVisitor.visit_str(s))
             .collect();
         notes.map(|notes| Notes(notes))
     }

@@ -1,12 +1,9 @@
-use crate::envelope::{Envelope, Point};
 //use crate::error::{AsciiLoadError, GenerateSamplesError, LoadError};
-use crate::instrument::Instrument;
+
 use crate::voice::{Voice, VoiceIterator};
-use crate::note::Note;
-use std::io::BufReader;
-use std::io::Read;
+
+use serde::{Deserialize, Serialize};
 use std::str;
-use serde::{Serialize, Deserialize};
 
 /**
  * The entire song as a structure.
@@ -64,9 +61,7 @@ impl Song {
     pub fn voice_iterators(&self) -> Vec<VoiceIterator> {
         self.voices
             .iter()
-            .map(|voice| {
-                VoiceIterator::new(voice, 1.0 / self.ticks_per_second as f64)
-            })
+            .map(|voice| VoiceIterator::new(voice, 1.0 / self.ticks_per_second as f64))
             .collect()
     }
 

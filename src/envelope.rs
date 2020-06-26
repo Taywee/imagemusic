@@ -1,6 +1,6 @@
 use serde::de::{self, Error};
 use serde::ser::{self, SerializeTuple};
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use std::fmt;
 
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
@@ -37,7 +37,7 @@ impl<'de> de::Visitor<'de> for PointVisitor {
 
     fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
     where
-        A: de::SeqAccess<'de>
+        A: de::SeqAccess<'de>,
     {
         let stop: Option<i8> = seq.next_element()?;
         let stop = stop.ok_or_else(|| A::Error::invalid_length(1, &self))?;
@@ -45,10 +45,7 @@ impl<'de> de::Visitor<'de> for PointVisitor {
         let amplitude = amplitude.ok_or_else(|| A::Error::invalid_length(0, &self))?;
         let stop = stop as f64 / 100.0;
         let amplitude = amplitude as f64 / 255.0;
-        Ok(Point {
-            stop,
-            amplitude,
-        })
+        Ok(Point { stop, amplitude })
     }
 }
 
@@ -67,19 +64,19 @@ pub struct Envelope(pub Vec<Point>);
 impl Default for Envelope {
     fn default() -> Self {
         Envelope(vec![
-            Point{
+            Point {
                 stop: 0.0,
                 amplitude: 0.0,
             },
-            Point{
+            Point {
                 stop: 0.05,
                 amplitude: 1.0,
             },
-            Point{
+            Point {
                 stop: -0.05,
                 amplitude: 0.8,
             },
-            Point{
+            Point {
                 stop: -0.01,
                 amplitude: 0.0,
             },
@@ -119,7 +116,8 @@ impl Envelope {
                 Some(Point {
                     amplitude: point.amplitude,
                     stop,
-                }).filter(|p| (0.0..=note_length).contains(&p.stop))
+                })
+                .filter(|p| (0.0..=note_length).contains(&p.stop))
             })
             .collect();
 
@@ -127,14 +125,14 @@ impl Envelope {
         // Remove out-of-order stops.  This may cause buggy results, but less buggy results than
         // simple sorting.
         //points.sort_by(|a, b| a.stop.partial_cmp(&b.stop).unwrap());
-        points.retain(move |point| 
+        points.retain(move |point| {
             if point.stop > lastmax {
                 lastmax = point.stop;
                 true
             } else {
                 false
             }
-        );
+        });
 
         // Can probably make all of this much nicer.
         if points.first().unwrap().stop >= time_point {

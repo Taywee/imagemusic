@@ -1,9 +1,9 @@
 extern crate asciimusic;
 
 use asciimusic::Song;
-use std::io::prelude::*;
 use std::env;
 use std::fs;
+use std::io::prelude::*;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().skip(1).collect();

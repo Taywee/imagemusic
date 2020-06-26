@@ -1,6 +1,6 @@
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::f64;
-use rand::Rng;
 
 #[derive(Debug, Serialize, Deserialize, Copy, Clone)]
 pub enum Instrument {
