@@ -57,7 +57,7 @@ impl<'a> Iterator for SongIterator<'a> {
 }
 
 impl Song {
-    pub fn voice_iterators(&self) -> Vec<VoiceIterator> {
+    pub fn voice_iterators(&self) -> Vec<VoiceIterator<'_>> {
         self.voices
             .iter()
             .map(|voice| VoiceIterator::new(voice, 1.0 / self.ticks_per_second as f64))
@@ -66,7 +66,7 @@ impl Song {
 
     /** Render the song as f64 samples.
      */
-    pub fn samples(&mut self) -> SongIterator {
+    pub fn samples(&mut self) -> SongIterator<'_> {
         let voice_iterators = self.voice_iterators();
         let volume_modifier = 1.0 / (voice_iterators.len() as f64);
         SongIterator {

@@ -1,5 +1,3 @@
-extern crate asciimusic;
-
 use asciimusic::Song;
 use std::env;
 use std::fs;

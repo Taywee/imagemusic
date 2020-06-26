@@ -2,7 +2,7 @@ use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::f64;
 
-#[derive(Debug, Serialize, Deserialize, Copy, Clone)]
+#[derive(Debug, Serialize, Deserialize, Copy, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Instrument {
     Sawtooth,
     Sine,

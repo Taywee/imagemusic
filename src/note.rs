@@ -273,7 +273,7 @@ thread_local! {
 impl<'de> de::Visitor<'de> for StrNoteVisitor {
     type Value = Note;
 
-    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter.write_str("a {length}{name}{octave} string")
     }
 
@@ -308,7 +308,7 @@ impl<'de> de::Visitor<'de> for StrNoteVisitor {
 impl<'de> de::Visitor<'de> for BinNoteVisitor {
     type Value = Note;
 
-    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter.write_str("a ({length}, {pitch}) tuple")
     }
 
@@ -385,7 +385,7 @@ struct StrNotesVisitor;
 impl<'de> de::Visitor<'de> for StrNotesVisitor {
     type Value = Notes;
 
-    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter.write_str("A series of notes and rests, in {tickcount}{note}{octave} format, or {tickcount}r for rests")
     }
 
@@ -414,7 +414,7 @@ impl<'de> de::Visitor<'de> for StrNotesVisitor {
 impl<'de> de::Visitor<'de> for BinNotesVisitor {
     type Value = Notes;
 
-    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter.write_str("A series of binary notes")
     }
 
