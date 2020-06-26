@@ -1,8 +1,9 @@
 use asciimusic::Song;
 use std::env;
 use std::fs;
-use std::io::prelude::*;
+use std::io::Read;
 
+/// Compress into base64(brotli(bincode(song)))
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().skip(1).collect();
     if args.len() < 1 {

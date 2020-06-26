@@ -12,6 +12,9 @@ repository = "https://gitlab.com/Taywee/asciimusic"
 keywords = ["music", "audio"]
 categories = ["multimedia::audio"]
 
+[lib]
+crate-type = ["cdylib", "rlib"]
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
 regex = '1'
@@ -19,6 +22,21 @@ toml = '0.5'
 brotli = '3'
 base64 = '0.12'
 bincode = '1'
+js-sys = '^0.3'
+
+[dependencies.wasm-bindgen]
+version = '^0.2'
+features = ['serde-serialize']
+
+[dependencies.web-sys]
+version = "0.3.4"
+features = [
+  'Document',
+  'Element',
+  'HtmlElement',
+  'Node',
+  'Window',
+]
 
 [dependencies.rand]
 version = '0.7'
@@ -27,3 +45,9 @@ features = ['small_rng']
 [dependencies.serde]
 version = '1'
 features = ['derive']
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = 'abort'

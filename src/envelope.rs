@@ -40,12 +40,12 @@ impl<'de> de::Visitor<'de> for PointVisitor {
         A: de::SeqAccess<'de>,
     {
         let stop: Option<i8> = seq.next_element()?;
-        let stop = stop.ok_or_else(|| A::Error::invalid_length(1, &self))?;
+        let stop = stop.ok_or_else(|| A::Error::invalid_length(0, &self))?;
         let amplitude: Option<u8> = seq.next_element()?;
-        let amplitude = amplitude.ok_or_else(|| A::Error::invalid_length(0, &self))?;
+        let amplitude = amplitude.ok_or_else(|| A::Error::invalid_length(1, &self))?;
         let stop = stop as f64 / 100.0;
         let amplitude = amplitude as f64 / 255.0;
-        Ok(Point { stop, amplitude })
+        Ok(dbg!(Point { stop, amplitude }))
     }
 }
 
