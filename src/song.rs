@@ -1,7 +1,6 @@
 //use crate::error::{AsciiLoadError, GenerateSamplesError, LoadError};
 
 use crate::voice::{Voice, VoiceIterator};
-
 use serde::{Deserialize, Serialize};
 use std::str;
 
