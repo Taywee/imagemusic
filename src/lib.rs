@@ -5,11 +5,11 @@
  */
 
 pub mod envelope;
+pub mod image;
 pub mod instrument;
 pub mod note;
 pub mod song;
 pub mod voice;
-pub mod image;
 
 pub use crate::song::Song;
 
@@ -37,11 +37,14 @@ pub fn main() -> Result<(), JsValue> {
 
 #[wasm_bindgen]
 pub fn parse_song(input: String) -> Result<*mut Song, JsValue> {
-    let compressed: Result<_, JsValue> = base64::decode_config(input, base64::URL_SAFE_NO_PAD).map_err(|e| format!("{}", e).into());
+    let compressed: Result<_, JsValue> =
+        base64::decode_config(input, base64::URL_SAFE_NO_PAD).map_err(|e| format!("{}", e).into());
     let mut bincode: Vec<u8> = Vec::new();
-    let result: Result<_, JsValue> = brotli::BrotliDecompress(&mut &compressed?[..], &mut bincode).map_err(|e| format!("{}", e).into());
+    let result: Result<_, JsValue> = brotli::BrotliDecompress(&mut &compressed?[..], &mut bincode)
+        .map_err(|e| format!("{}", e).into());
     result?;
-    let song: Result<_, JsValue> = bincode::deserialize(&bincode).map_err(|e| format!("{}", e).into());
+    let song: Result<_, JsValue> =
+        bincode::deserialize(&bincode).map_err(|e| format!("{}", e).into());
     let song = song?;
     log(&format!("{:#?}", song));
     Ok(Box::into_raw(Box::new(song)))

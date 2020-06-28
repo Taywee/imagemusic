@@ -1,9 +1,9 @@
+use asciimusic::image::{Image, Payload, Pixel};
 use asciimusic::Song;
-use asciimusic::image::{Payload, Pixel, Image};
+use image::{DynamicImage, RgbaImage};
 use std::env;
 use std::fs;
 use std::io::Read;
-use image::{DynamicImage, RgbaImage};
 
 /// Compress into base64(brotli(bincode(song)))
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -29,14 +29,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let image = image.into_rgba();
     let dimensions = image.dimensions();
 
-    let pixels: Vec<_> = image.pixels().map(|pixel|
-            Pixel {
-                r: pixel[0],
-                g: pixel[1],
-                b: pixel[2],
-                a: pixel[3],
-            }
-        ).collect();
+    let pixels: Vec<_> = image
+        .pixels()
+        .map(|pixel| Pixel {
+            r: pixel[0],
+            g: pixel[1],
+            b: pixel[2],
+            a: pixel[3],
+        })
+        .collect();
 
     let mut image = Image::new(dimensions, pixels);
     image.bake_payload(&payload);

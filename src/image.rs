@@ -45,8 +45,12 @@ impl Payload {
             let mut chunk: Vec<u8> = chunk.into_iter().copied().collect();
             chunk.resize(3, 0);
             data.push(Superpixel::Value((chunk[0] & 0b11111100) >> 2));
-            data.push(Superpixel::Value(((chunk[0] & 0b00000011) << 4) | ((chunk[1] & 0b11110000) >> 4)));
-            data.push(Superpixel::Value(((chunk[1] & 0b00001111) << 2) | ((chunk[2] & 0b11000000) >> 6)));
+            data.push(Superpixel::Value(
+                ((chunk[0] & 0b00000011) << 4) | ((chunk[1] & 0b11110000) >> 4),
+            ));
+            data.push(Superpixel::Value(
+                ((chunk[1] & 0b00001111) << 2) | ((chunk[2] & 0b11000000) >> 6),
+            ));
             data.push(Superpixel::Value(chunk[2] & 0b00111111));
         }
 
@@ -69,10 +73,7 @@ impl Payload {
         data.insert(width as usize * 2 + 1, Superpixel::Black);
         data.insert(width as usize * 2 + 2, Superpixel::Black);
         data.resize(width as usize * width as usize, Superpixel::Ignore);
-        Payload {
-            width,
-            data,
-        }
+        Payload { width, data }
     }
 
     pub fn get_superpixel(&self, x: u16, y: u16) -> &Superpixel {
@@ -96,7 +97,7 @@ pub struct Pixel {
 #[derive(Debug, Clone, Hash, Eq, PartialEq, PartialOrd, Ord)]
 pub struct Image {
     dimensions: (u32, u32),
-    pixels: Vec<Pixel>
+    pixels: Vec<Pixel>,
 }
 /// Round a value to an affinity sixteenth
 /// Affinity must be [0, 3], or this will panic.
@@ -107,11 +108,15 @@ fn round_to_affinity(affinity: u8, input: u8) -> u8 {
     let offset = 8 + 16 * affinity;
 
     // (Distance from value, value)
-    (0u8..4u8).map(|quadrant| {
-        let value = quadrant * 64 + offset;
-        let distance = value.max(input) - value.min(input);
-        (distance, value)
-    }).min_by_key(|(distance, _)| *distance).unwrap().1
+    (0u8..4u8)
+        .map(|quadrant| {
+            let value = quadrant * 64 + offset;
+            let distance = value.max(input) - value.min(input);
+            (distance, value)
+        })
+        .min_by_key(|(distance, _)| *distance)
+        .unwrap()
+        .1
 }
 
 impl Image {
@@ -121,12 +126,9 @@ impl Image {
         if pixels.len() != dimensions.0 as usize * dimensions.1 as usize {
             panic!("Pixels must match in size");
         }
-        Image {
-            dimensions,
-            pixels,
-        }
+        Image { dimensions, pixels }
     }
-    
+
     pub fn dimensions(&self) -> (u32, u32) {
         self.dimensions
     }
@@ -145,21 +147,28 @@ impl Image {
             let x = i % self.dimensions.0;
             let y = i / self.dimensions.0;
 
-            let superpixel = payload.get_superpixel((x / superpixel_width) as u16, (y / superpixel_height) as u16);
+            let superpixel = payload.get_superpixel(
+                (x / superpixel_width) as u16,
+                (y / superpixel_height) as u16,
+            );
             match superpixel {
                 Superpixel::Ignore => (),
-                Superpixel::Black => *pixel = Pixel {
-                    r: u8::MIN,
-                    g: u8::MIN,
-                    b: u8::MIN,
-                    a: u8::MAX,
-                },
-                Superpixel::White => *pixel = Pixel {
-                    r: u8::MAX,
-                    g: u8::MAX,
-                    b: u8::MAX,
-                    a: u8::MAX,
-                },
+                Superpixel::Black => {
+                    *pixel = Pixel {
+                        r: u8::MIN,
+                        g: u8::MIN,
+                        b: u8::MIN,
+                        a: u8::MAX,
+                    }
+                }
+                Superpixel::White => {
+                    *pixel = Pixel {
+                        r: u8::MAX,
+                        g: u8::MAX,
+                        b: u8::MAX,
+                        a: u8::MAX,
+                    }
+                }
                 Superpixel::Value(value) => {
                     *pixel = Pixel {
                         r: round_to_affinity((value & 0b00110000) >> 4, pixel.r),
