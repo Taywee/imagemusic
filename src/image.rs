@@ -14,6 +14,7 @@
 /// itself.
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub enum Superpixel {
+    Ignore,
     Black,
     White,
     /// 1-64
@@ -67,6 +68,7 @@ impl Payload {
         data.insert(width as usize * 2, Superpixel::Black);
         data.insert(width as usize * 2 + 1, Superpixel::Black);
         data.insert(width as usize * 2 + 2, Superpixel::Black);
+        data.resize(width as usize * width as usize, Superpixel::Ignore);
         Payload {
             width,
             data,
@@ -74,7 +76,12 @@ impl Payload {
     }
 
     pub fn get_superpixel(&self, x: u16, y: u16) -> &Superpixel {
-        &self.data[x as usize + y as usize * self.width as usize]
+        let index = x as usize + y as usize * self.width as usize;
+        if index >= self.data.len() {
+            self.data.last().unwrap()
+        } else {
+            &self.data[index]
+        }
     }
 }
 
@@ -136,10 +143,11 @@ impl Image {
         for (i, pixel) in self.pixels.iter_mut().enumerate() {
             let i = i as u32;
             let x = i % self.dimensions.0;
-            let y = i % self.dimensions.0;
+            let y = i / self.dimensions.0;
 
             let superpixel = payload.get_superpixel((x / superpixel_width) as u16, (y / superpixel_height) as u16);
             match superpixel {
+                Superpixel::Ignore => (),
                 Superpixel::Black => *pixel = Pixel {
                     r: u8::MIN,
                     g: u8::MIN,

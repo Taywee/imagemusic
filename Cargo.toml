@@ -23,6 +23,7 @@ brotli = '3'
 base64 = '0.12'
 bincode = '1'
 js-sys = '^0.3'
+image = '0.23.6'
 
 [dependencies.wasm-bindgen]
 version = '^0.2'
