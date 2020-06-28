@@ -9,6 +9,7 @@ pub mod instrument;
 pub mod note;
 pub mod song;
 pub mod voice;
+pub mod image;
 
 pub use crate::song::Song;
 
