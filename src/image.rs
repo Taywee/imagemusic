@@ -301,6 +301,9 @@ impl Image {
 
             let superpixel = payload.get_superpixel(
                 // Prevent superpixel wrapping
+                // TODO: maybe instead of preventing wrapping, instead set out-of-bound with 2s or
+                // 3s to still provide mosaic effect.  Might want to do the same for Ignore, to
+                // make the end of the data not so obvious.
                 (payload.width - 1).min((x / superpixel_width) as u8),
                 (payload.width - 1).min((y / superpixel_height) as u8),
             );
