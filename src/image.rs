@@ -76,7 +76,7 @@ impl Payload {
         Payload { width, data }
     }
 
-    pub fn get_superpixel(&self, x: u16, y: u16) -> &Superpixel {
+    pub fn get_superpixel(&self, x: u8, y: u8) -> &Superpixel {
         let index = x as usize + y as usize * self.width as usize;
         if index >= self.data.len() {
             self.data.last().unwrap()
@@ -148,8 +148,8 @@ impl Image {
             let y = i / self.dimensions.0;
 
             let superpixel = payload.get_superpixel(
-                (x / superpixel_width) as u16,
-                (y / superpixel_height) as u16,
+                (payload.width - 1).min((x / superpixel_width) as u8),
+                (payload.width - 1).min((y / superpixel_height) as u8),
             );
             match superpixel {
                 Superpixel::Ignore => (),
@@ -180,6 +180,10 @@ impl Image {
             }
         }
     }
+
+    // /// Read a payload from this image.
+    // pub fn read_payload(&self) -> Payload {
+    // }
 }
 
 #[cfg(test)]
