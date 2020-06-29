@@ -14,6 +14,7 @@ mod error;
 pub use error::Error;
 
 use std::collections::HashMap;
+use std::convert::TryInto;
 
 /// Superpixel affinity, determines whether a superpixel is black, white, or the value of the pixel
 /// itself.
@@ -51,12 +52,12 @@ impl Payload {
 
             // Adding 0s on the end doesn't matter because of the length prefix.
             chunk.resize(3, 0);
-            data.push(Superpixel::Value((chunk[0] & 0b11111100) >> 2));
+            data.push(Superpixel::Value(chunk[0] >> 2));
             data.push(Superpixel::Value(
-                ((chunk[0] & 0b00000011) << 4) | ((chunk[1] & 0b11110000) >> 4),
+                ((chunk[0] & 0b00000011) << 4) | (chunk[1] >> 4),
             ));
             data.push(Superpixel::Value(
-                ((chunk[1] & 0b00001111) << 2) | ((chunk[2] & 0b11000000) >> 6),
+                ((chunk[1] & 0b00001111) << 2) | (chunk[2] >> 6),
             ));
             data.push(Superpixel::Value(chunk[2] & 0b00111111));
         }
@@ -79,7 +80,8 @@ impl Payload {
         data.insert(width as usize * 2, Superpixel::Black);
         data.insert(width as usize * 2 + 1, Superpixel::Black);
         data.insert(width as usize * 2 + 2, Superpixel::Black);
-        data.resize(width as usize * width as usize, Superpixel::Ignore);
+        //data.resize(width as usize * width as usize, Superpixel::Ignore);
+        data.resize(width as usize * width as usize, Superpixel::Black);
         Payload { width, data }
     }
 
@@ -115,6 +117,56 @@ impl Payload {
             self.data.last().unwrap()
         } else {
             &self.data[index]
+        }
+    }
+
+    /// Read the data out of this packed payload
+    pub fn data(&self) -> Result<Vec<u8>, Error> {
+        let mut data = self.data.clone();
+        data.remove(self.width as usize * 2 + 2);
+        data.remove(self.width as usize * 2 + 1);
+        data.remove(self.width as usize * 2);
+        data.remove(self.width as usize + 2);
+        data.remove(self.width as usize + 1);
+        data.remove(self.width as usize);
+        data.remove(2);
+        data.remove(1);
+        data.remove(0);
+
+        let data: Vec<u8> = data.into_iter().map(|superpixel| {
+            use Superpixel::*;
+            match superpixel {
+                Ignore => 0,
+                Black => 0,
+                White => 63,
+                Value(value) => value & 0b00111111,
+            }
+        }).collect();
+
+        let mut output = Vec::with_capacity(data.len());
+
+        for chunk in data.chunks(4) {
+            let mut chunk: Vec<u8> = chunk.into_iter().copied().collect();
+            // Extra 0s shouldn't really matter, but this simplifies decoding
+            chunk.resize(4, 0);
+
+            output.push((chunk[0] << 2) | (chunk[1] >> 4));
+            output.push((chunk[1] << 4) | (chunk[2] >> 2));
+            output.push((chunk[2] << 6) | chunk[3]);
+        }
+
+        let length = u16::from_be_bytes(output[0..2].try_into().unwrap());
+        // Remove length
+        output.remove(0);
+        output.remove(0);
+        if length as usize > output.len() {
+            Err(Error::InvalidLength{
+                encoded: length,
+                available: output.len() as u16,
+            })
+        } else {
+            output.resize(length as usize, 0);
+            Ok(output)
         }
     }
 }
@@ -201,9 +253,11 @@ impl Pixel {
 
     /// Get the value encoded in this pixel
     pub fn value(self) -> Superpixel {
-        if self.r < 20 && self.g < 20 && self.b < 20 {
+        // We can't just return the affinitie'd value and assume black for 0 and white for 63,
+        // because 0 may not be black, due to quadrants, and 63 may not be white.
+        if self.r < 16 && self.g < 16 && self.b < 16 {
             Superpixel::Black
-        } else if self.r > 235 && self.g > 235 && self.b > 235 {
+        } else if self.r > 239 && self.g > 239 && self.b > 239 {
             Superpixel::White
         } else {
             let r = get_affinity(self.r);
@@ -289,7 +343,7 @@ impl Image {
             } else {
                 // looking for the first black pixel after the first white
                 if pixel.r < 20 && pixel.b < 20 && pixel.g < 20 {
-                    return Ok(i as u32);
+                    return Ok(i as u32 / 2);
                 }
             }
         }
@@ -311,7 +365,7 @@ impl Image {
             } else {
                 // looking for the first black pixel after the first white
                 if pixel.r < 20 && pixel.b < 20 && pixel.g < 20 {
-                    return Ok(i as u32);
+                    return Ok(i as u32 / 2);
                 }
             }
         }
@@ -337,8 +391,8 @@ impl Image {
             for x in 0..horizontal_superpixels {
                 // All the pixels in this superpixel
                 let mut pixels = Vec::new();
-                for sub_y in 0..superpixel_width {
-                    for sub_x in 0..superpixel_height {
+                for sub_y in 0..superpixel_height {
+                    for sub_x in 0..superpixel_width {
                         // Total pixel offsets
                         let x_offset = x * superpixel_width + sub_x;
                         let y_offset = y * superpixel_height + sub_y;
@@ -367,6 +421,7 @@ impl Image {
 #[cfg(test)]
 mod test {
     use super::*;
+    use rand::{Rng};
 
     #[test]
     fn affinity_rounding() {
@@ -394,5 +449,26 @@ mod test {
         assert_eq!(round_to_affinity(1, 255), 216);
         assert_eq!(round_to_affinity(2, 255), 232);
         assert_eq!(round_to_affinity(3, 255), 255);
+    }
+
+    #[test]
+    fn payload_roundtrip() {
+        let mut rng = rand::thread_rng();
+
+        let dimensions = (100, 100);
+        let mut origin_image = Image::new(dimensions, std::iter::from_fn(||
+            Some(Pixel {
+                r: rng.gen(),
+                g: rng.gen(),
+                b: rng.gen(),
+                a: rng.gen(),
+            })).take(dimensions.0 as usize * dimensions.1 as usize).collect::<Vec<Pixel>>());
+
+        let data: Vec<u8> = (0..1000).map(|_| rng.gen()).collect();
+        let payload = Payload::new(&data);
+
+        origin_image.bake_payload(&payload);
+        let read_data = origin_image.read_payload().expect("Could not read payload").data().expect("Could not read data");
+        assert_eq!(data, read_data);
     }
 }
