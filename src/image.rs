@@ -44,7 +44,8 @@ impl Payload {
         to_encode.extend_from_slice(&(input.len() as u16).to_be_bytes());
         to_encode.extend_from_slice(input);
 
-        let mut data: Vec<Superpixel> = Vec::new();
+        // Initial target pattern
+        let mut data: Vec<Superpixel> = vec![ Superpixel::Black, Superpixel::White, Superpixel::White, Superpixel::White, Superpixel::Black, Superpixel::Black, Superpixel::Black, Superpixel::Black, Superpixel::Black];
 
         for chunk in to_encode.chunks(3) {
             // Make sure we always reserve 4 pixels at least
@@ -63,29 +64,22 @@ impl Payload {
         }
 
         // needed width
-        let width = ((data.len() + 9) as f32).sqrt().ceil() as u8;
+        let width = (data.len() as f32).sqrt().ceil() as u8;
 
-        // This is stupidly inefficient.  Each insert will push everything over each time.
+        // All the extra superpixels should be ignore superpixels
+        data.resize(width as usize * width as usize, Superpixel::Ignore);
 
-        // Insert target pattern
-        // BWB
-        // WWB
-        // BBB
-        data.insert(0, Superpixel::Black);
-        data.insert(1, Superpixel::White);
-        data.insert(2, Superpixel::Black);
-        data.insert(width as usize, Superpixel::White);
-        data.insert(width as usize + 1, Superpixel::White);
-        data.insert(width as usize + 2, Superpixel::Black);
-        data.insert(width as usize * 2, Superpixel::Black);
-        data.insert(width as usize * 2 + 1, Superpixel::Black);
-        data.insert(width as usize * 2 + 2, Superpixel::Black);
-        //data.resize(width as usize * width as usize, Superpixel::Ignore);
-        data.resize(width as usize * width as usize, Superpixel::Black);
-        Payload { width, data }
+        let mut payload = Payload { width, data: vec![Superpixel::Ignore; width as usize * width as usize] };
+
+        for (dest, src) in payload.unwrapped_payload_mut().into_iter().zip(data.into_iter()) {
+            *dest = src;
+        }
+
+        payload
     }
 
     /// Takes in data as raw superpixels and width, checking the target and vector size.
+    /// This is taken in normal row-major order, not the corner spiral.
     fn from_raw<V: Into<Vec<Superpixel>>>(width: u8, data: V) -> Result<Self, Error> {
         let data = data.into();
         if data.len() != (width as usize).pow(2) {
@@ -111,27 +105,122 @@ impl Payload {
 
     }
 
-    pub fn get_superpixel(&self, x: u8, y: u8) -> &Superpixel {
-        let index = x as usize + y as usize * self.width as usize;
-        if index >= self.data.len() {
-            self.data.last().unwrap()
+    pub fn rows(&self) -> impl Iterator<Item = impl Iterator<Item = &Superpixel>> {
+        self.data.chunks(self.width as usize).map(|chunk| chunk.into_iter())
+    }
+
+    /// Get the indexed row, always grabbing the last if over.
+    fn row(&self, index: usize) -> Vec<&Superpixel> {
+        if index >= self.width as usize {
+            self.rows().last().unwrap().collect()
         } else {
-            &self.data[index]
+            self.rows().skip(index).next().unwrap().collect()
         }
+    }
+
+    /// Get the indexed row, always grabbing the last if over.
+    fn row_mut(&mut self, index: usize) -> Vec<&mut Superpixel> {
+        if index >= self.width as usize {
+            self.rows_mut().last().unwrap().collect()
+        } else {
+            self.rows_mut().skip(index).next().unwrap().collect()
+        }
+    }
+
+    pub fn rows_mut(&mut self) -> impl Iterator<Item = impl Iterator<Item = &mut Superpixel>> {
+        self.data.chunks_mut(self.width as usize).map(|chunk| chunk.into_iter())
+    }
+
+    pub fn columns(&self) -> impl Iterator<Item = impl Iterator<Item = &Superpixel>> {
+        (0..(self.width as usize)).map(move |column| {
+            self.data.iter().skip(column).step_by(self.width as usize)
+        })
+    }
+
+    /// Get the column as indexed, always grabbing the last if needed.
+    fn column(&self, index: usize) -> Vec<&Superpixel> {
+        if index >= self.width as usize {
+            self.columns().last().unwrap().collect()
+        } else {
+            self.columns().skip(index).next().unwrap().collect()
+        }
+    }
+
+    /// Get the mutable column as indexed, always grabbing the last if needed.
+    pub fn column_mut(&mut self, index: usize) -> Vec<&mut Superpixel> {
+        let index = if index >= self.width as usize {
+            self.width as usize - 1
+        } else {
+            index
+        };
+        let output: Vec<_> = self.data.iter_mut().skip(index).step_by(self.width as usize).collect();
+
+        output
+    }
+
+    /// Get the indexed superpixel.  When out of bounds, the last superpixel in that direction will
+    /// be selected.
+    pub fn get_superpixel(&self, x: usize, y: usize) -> &Superpixel {
+        let column = self.column(x);
+        if y >= column.len() {
+            column.last().unwrap()
+        } else {
+            &column[y]
+        }
+    }
+
+    /// Get the indexed superpixel.  When out of bounds, the last superpixel in that direction will
+    /// be selected.
+    pub fn get_superpixel_mut(&mut self, x: usize, y: usize) -> &mut Superpixel {
+        let x = x.min(self.width as usize - 1);
+        let y = y.min(self.width as usize - 1);
+        &mut self.data[y * self.width as usize + x]
+    }
+
+    /// The payload spirals down from the top left like this:
+    /// 0  1  4  9
+    /// 3  2  5  10
+    /// 8  7  6  11
+    /// 15 14 13 12
+    pub fn unwrapped_payload(&self) -> Vec<Superpixel> {
+        let mut output = Vec::new();
+        for radius in 0..self.width {
+            for row in 0..=radius {
+                output.push(self.data[row as usize * self.width as usize + radius as usize]);
+            }
+
+            for column in (0..radius).rev() {
+                output.push(self.data[radius as usize * self.width as usize + column as usize]);
+            }
+        }
+        output
+    }
+
+    /// The payload spirals down from the top left like this:
+    /// 0  1  4  9
+    /// 3  2  5  10
+    /// 8  7  6  11
+    /// 15 14 13 12
+    pub fn unwrapped_payload_mut(&mut self) -> Vec<&mut Superpixel> {
+        let mut data_vec: Vec<Option<&mut Superpixel>> = self.data.iter_mut().map(|s| Some(s)).collect();
+        let mut output = Vec::new();
+        for radius in 0..self.width {
+            for row in 0..=radius {
+                output.push(data_vec[row as usize * self.width as usize + radius as usize].take().unwrap());
+            }
+
+            for column in (0..radius).rev() {
+                output.push(data_vec[radius as usize * self.width as usize + column as usize].take().unwrap());
+            }
+        }
+        output
     }
 
     /// Read the data out of this packed payload
     pub fn data(&self) -> Result<Vec<u8>, Error> {
-        let mut data = self.data.clone();
-        data.remove(self.width as usize * 2 + 2);
-        data.remove(self.width as usize * 2 + 1);
-        data.remove(self.width as usize * 2);
-        data.remove(self.width as usize + 2);
-        data.remove(self.width as usize + 1);
-        data.remove(self.width as usize);
-        data.remove(2);
-        data.remove(1);
-        data.remove(0);
+        let data = self.unwrapped_payload();
+        // skip target
+        let data: Vec<_> = data[9..].into_iter().collect();
 
         let data: Vec<u8> = data.into_iter().map(|superpixel| {
             use Superpixel::*;
@@ -300,12 +389,8 @@ impl Image {
             let y = i / self.dimensions.0;
 
             let superpixel = payload.get_superpixel(
-                // Prevent superpixel wrapping
-                // TODO: maybe instead of preventing wrapping, instead set out-of-bound with 2s or
-                // 3s to still provide mosaic effect.  Might want to do the same for Ignore, to
-                // make the end of the data not so obvious.
-                (payload.width - 1).min((x / superpixel_width) as u8),
-                (payload.width - 1).min((y / superpixel_height) as u8),
+                x as usize / superpixel_width as usize,
+                y as usize / superpixel_height as usize,
             );
             match superpixel {
                 Superpixel::Ignore => (),
@@ -473,5 +558,57 @@ mod test {
         origin_image.bake_payload(&payload);
         let read_data = origin_image.read_payload().expect("Could not read payload").data().expect("Could not read data");
         assert_eq!(data, read_data);
+    }
+
+    #[test]
+    fn rows_and_columns() {
+        use Superpixel::*;
+        let payload = Payload {
+            width: 4,
+            data: vec![
+                Black, White, Black, Value(0),
+                White, White, Black, Value(1),
+                Black, Black, Black, Value(2),
+                Value(6), Value(5), Value(4), Value(3),
+            ]
+        };
+
+        assert_eq!(vec![Black, White, Black, Value(0)], payload.rows().next().unwrap().copied().collect::<Vec<_>>());
+        assert_eq!(vec![White, White, Black, Value(1)], payload.rows().skip(1).next().unwrap().copied().collect::<Vec<_>>());
+        assert_eq!(vec![Black, Black, Black, Value(2)], payload.rows().skip(2).next().unwrap().copied().collect::<Vec<_>>());
+        assert_eq!(vec![Value(6), Value(5), Value(4), Value(3)], payload.rows().skip(3).next().unwrap().copied().collect::<Vec<_>>());
+        assert!(matches!(payload.rows().skip(4).next(), None));
+
+        assert_eq!(vec![Black, White, Black, Value(6)], payload.columns().next().unwrap().copied().collect::<Vec<_>>());
+        assert_eq!(vec![White, White, Black, Value(5)], payload.columns().skip(1).next().unwrap().copied().collect::<Vec<_>>());
+        assert_eq!(vec![Black, Black, Black, Value(4)], payload.columns().skip(2).next().unwrap().copied().collect::<Vec<_>>());
+        assert_eq!(vec![Value(0), Value(1), Value(2), Value(3)], payload.columns().skip(3).next().unwrap().copied().collect::<Vec<_>>());
+        assert!(matches!(payload.columns().skip(4).next(), None));
+    }
+
+    #[test]
+    fn unwrapped_payload() {
+        use Superpixel::*;
+        let mut payload = Payload {
+            width: 4,
+            data: vec![
+                Value(0), Value(1), Value(2), Value(3),
+                Value(4), Value(5), Value(6), Value(7),
+                Value(8), Value(9), Value(10), Value(11),
+                Value(12), Value(13), Value(14), Value(15),
+            ]
+        };
+
+        assert_eq!(vec![Value(0),
+        Value(1), Value(5), Value(4),
+        Value(2), Value(6), Value(10), Value(9), Value(8),
+        Value(3), Value(7), Value(11), Value(15), Value(14), Value(13), Value(12),
+        ], payload.unwrapped_payload());
+
+        assert_eq!(vec![&Value(0),
+        &Value(1), &Value(5), &Value(4),
+        &Value(2), &Value(6), &Value(10), &Value(9), &Value(8),
+        &Value(3), &Value(7), &Value(11), &Value(15), &Value(14), &Value(13), &Value(12),
+        ], payload.unwrapped_payload_mut());
     }
 }
