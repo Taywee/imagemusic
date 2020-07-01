@@ -14,7 +14,24 @@ pub fn criterion_benchmark(c: &mut Criterion) {
             b: rng.gen(),
             a: rng.gen(),
         })).take(dimensions.0 as usize * dimensions.1 as usize).collect::<Vec<Pixel>>());
-    c.bench_function("image 1000 rand", |b| b.iter(|| {
+    c.bench_function("image 1000 rand", move |b| b.iter(|| {
+        let mut image = origin_image.clone();
+        image.bake_payload(&payload);
+        let read_data = image.read_payload().expect("Could not read payload").data().expect("Could not read data");
+        assert_eq!(data, read_data);
+    }));
+
+    let data: Vec<u8> = (0..500).map(|_| rng.gen()).collect();
+    let payload = Payload::new(&data);
+    let origin_image = Image::new(dimensions, std::iter::from_fn(||
+        Some(Pixel {
+            r: rng.gen(),
+            g: rng.gen(),
+            b: rng.gen(),
+            a: rng.gen(),
+        })).take(dimensions.0 as usize * dimensions.1 as usize).collect::<Vec<Pixel>>());
+
+    c.bench_function("image 500 rand", move |b| b.iter(|| {
         let mut image = origin_image.clone();
         image.bake_payload(&payload);
         let read_data = image.read_payload().expect("Could not read payload").data().expect("Could not read data");
