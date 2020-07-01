@@ -14,7 +14,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
             b: rng.gen(),
             a: rng.gen(),
         })).take(dimensions.0 as usize * dimensions.1 as usize).collect::<Vec<Pixel>>());
-    c.bench_function("image 1000 rand", move |b| b.iter(|| {
+    c.bench_function("image 500x500 1000 rand", move |b| b.iter(|| {
         let mut image = origin_image.clone();
         image.bake_payload(&payload);
         let read_data = image.read_payload().expect("Could not read payload").data().expect("Could not read data");
@@ -31,7 +31,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
             a: rng.gen(),
         })).take(dimensions.0 as usize * dimensions.1 as usize).collect::<Vec<Pixel>>());
 
-    c.bench_function("image 500 rand", move |b| b.iter(|| {
+    c.bench_function("image 500x500 500 rand", move |b| b.iter(|| {
         let mut image = origin_image.clone();
         image.bake_payload(&payload);
         let read_data = image.read_payload().expect("Could not read payload").data().expect("Could not read data");
