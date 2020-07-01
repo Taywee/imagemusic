@@ -51,4 +51,22 @@ features = ['derive']
 opt-level = "z"
 lto = true
 codegen-units = 1
+
+[profile.test]
 panic = 'abort'
+
+[profile.bench]
+panic = 'abort'
+
+[profile.dev]
+panic = 'abort'
+
+[profile.doc]
+panic = 'abort'
+
+[dev-dependencies]
+criterion = '0.3'
+
+[[bench]]
+name = "image_coding"
+harness = false
