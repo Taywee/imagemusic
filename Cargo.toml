@@ -39,10 +39,6 @@ features = [
   'Window',
 ]
 
-[dependencies.rand]
-version = '0.7'
-features = ['small_rng']
-
 [dependencies.serde]
 version = '1'
 features = ['derive']
@@ -57,6 +53,11 @@ panic = 'abort'
 
 [dev-dependencies]
 criterion = '0.3'
+
+[dev-dependencies.rand]
+version = '0.7'
+features = ['small_rng']
+
 
 [[bench]]
 name = "image_coding"

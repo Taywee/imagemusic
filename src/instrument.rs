@@ -1,4 +1,3 @@
-use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::f64;
 
@@ -8,7 +7,6 @@ pub enum Instrument {
     Sine,
     Square,
     Triangle,
-    Noise,
 }
 
 impl Default for Instrument {
@@ -35,10 +33,6 @@ impl Instrument {
             //     \  /
             //      \/
             Instrument::Triangle => (((ramp - 0.25).abs() - 0.5).abs() - 0.25) * 4.0,
-            Instrument::Noise => {
-                let mut rng = rand::thread_rng();
-                rng.gen_range(-1.0, 1.0)
-            }
         }
     }
 }
