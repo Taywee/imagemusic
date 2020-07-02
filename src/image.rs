@@ -65,7 +65,17 @@ impl Payload {
         to_encode.extend_from_slice(input);
 
         // Initial target pattern
-        let mut data: Vec<Superpixel> = vec![ Superpixel::Black, Superpixel::White, Superpixel::White, Superpixel::White, Superpixel::Black, Superpixel::Black, Superpixel::Black, Superpixel::Black, Superpixel::Black];
+        let mut data: Vec<Superpixel> = vec![
+            Superpixel::Black,
+            Superpixel::White,
+            Superpixel::White,
+            Superpixel::White,
+            Superpixel::Black,
+            Superpixel::Black,
+            Superpixel::Black,
+            Superpixel::Black,
+            Superpixel::Black,
+        ];
 
         for chunk in to_encode.chunks(3) {
             // Make sure we always reserve 4 pixels at least
@@ -94,9 +104,16 @@ impl Payload {
             Superpixel::Value(value)
         });
 
-        let mut payload = Payload { width, data: vec![Superpixel::White; width as usize * width as usize] };
+        let mut payload = Payload {
+            width,
+            data: vec![Superpixel::White; width as usize * width as usize],
+        };
 
-        for (dest, src) in payload.unraveled_payload_mut().into_iter().zip(data.into_iter()) {
+        for (dest, src) in payload
+            .unraveled_payload_mut()
+            .into_iter()
+            .zip(data.into_iter())
+        {
             *dest = src;
         }
 
@@ -111,22 +128,21 @@ impl Payload {
             return Err(Error::InvalidDimensions);
         }
 
-        let payload = Payload {
-            width,
-            data,
-        };
+        let payload = Payload { width, data };
 
-        if &payload.unraveled_payload()[..9] == &[
-            Superpixel::Black,
-            Superpixel::White,
-            Superpixel::White,
-            Superpixel::White,
-            Superpixel::Black,
-            Superpixel::Black,
-            Superpixel::Black,
-            Superpixel::Black,
-            Superpixel::Black,
-        ] {
+        if &payload.unraveled_payload()[..9]
+            == &[
+                Superpixel::Black,
+                Superpixel::White,
+                Superpixel::White,
+                Superpixel::White,
+                Superpixel::Black,
+                Superpixel::Black,
+                Superpixel::Black,
+                Superpixel::Black,
+                Superpixel::Black,
+            ]
+        {
             Ok(payload)
         } else {
             Err(Error::NoTargetFound)
@@ -134,7 +150,9 @@ impl Payload {
     }
 
     pub fn rows(&self) -> impl Iterator<Item = impl Iterator<Item = &Superpixel>> {
-        self.data.chunks(self.width as usize).map(|chunk| chunk.into_iter())
+        self.data
+            .chunks(self.width as usize)
+            .map(|chunk| chunk.into_iter())
     }
 
     /// Get the indexed row, always grabbing the last if over.
@@ -147,9 +165,8 @@ impl Payload {
     }
 
     pub fn columns(&self) -> impl Iterator<Item = impl Iterator<Item = &Superpixel>> {
-        (0..(self.width as usize)).map(move |column| {
-            self.data.iter().skip(column).step_by(self.width as usize)
-        })
+        (0..(self.width as usize))
+            .map(move |column| self.data.iter().skip(column).step_by(self.width as usize))
     }
 
     /// Get the column as indexed, always grabbing the last if needed.
@@ -192,15 +209,24 @@ impl Payload {
     /// This is private because modifying a loaded payload to remove the target or corrupt the
     /// length or anything like that would be bad behavior.
     fn unraveled_payload_mut(&mut self) -> Vec<&mut Superpixel> {
-        let mut data_vec: Vec<Option<&mut Superpixel>> = self.data.iter_mut().map(|s| Some(s)).collect();
+        let mut data_vec: Vec<Option<&mut Superpixel>> =
+            self.data.iter_mut().map(|s| Some(s)).collect();
         let mut output = Vec::new();
         for radius in 0..self.width {
             for row in 0..=radius {
-                output.push(data_vec[row as usize * self.width as usize + radius as usize].take().unwrap());
+                output.push(
+                    data_vec[row as usize * self.width as usize + radius as usize]
+                        .take()
+                        .unwrap(),
+                );
             }
 
             for column in (0..radius).rev() {
-                output.push(data_vec[radius as usize * self.width as usize + column as usize].take().unwrap());
+                output.push(
+                    data_vec[radius as usize * self.width as usize + column as usize]
+                        .take()
+                        .unwrap(),
+                );
             }
         }
         output
@@ -212,14 +238,17 @@ impl Payload {
         // skip target
         let data: Vec<_> = data[9..].into_iter().collect();
 
-        let data: Vec<u8> = data.into_iter().map(|superpixel| {
-            use Superpixel::*;
-            match superpixel {
-                Black => 0,
-                White => 63,
-                Value(value) => value & 0b00111111,
-            }
-        }).collect();
+        let data: Vec<u8> = data
+            .into_iter()
+            .map(|superpixel| {
+                use Superpixel::*;
+                match superpixel {
+                    Black => 0,
+                    White => 63,
+                    Value(value) => value & 0b00111111,
+                }
+            })
+            .collect();
 
         let mut output = Vec::with_capacity(data.len());
 
@@ -238,7 +267,7 @@ impl Payload {
         output.remove(0);
         output.remove(0);
         if length as usize > output.len() {
-            Err(Error::InvalidLength{
+            Err(Error::InvalidLength {
                 encoded: length,
                 available: output.len() as u16,
             })
@@ -393,7 +422,13 @@ impl Image {
         let mut first_white = false;
 
         // Only take the first row
-        for (i, pixel) in self.pixels.iter().copied().enumerate().take(self.dimensions.0 as usize) {
+        for (i, pixel) in self
+            .pixels
+            .iter()
+            .copied()
+            .enumerate()
+            .take(self.dimensions.0 as usize)
+        {
             if !first_white {
                 // looking for the first white pixel
                 if pixel.r > 235 && pixel.b > 235 && pixel.g > 235 {
@@ -415,7 +450,13 @@ impl Image {
         let mut first_white = false;
 
         // Only take the first column
-        for (i, pixel) in self.pixels.iter().step_by(self.dimensions.0 as usize).copied().enumerate() {
+        for (i, pixel) in self
+            .pixels
+            .iter()
+            .step_by(self.dimensions.0 as usize)
+            .copied()
+            .enumerate()
+        {
             if !first_white {
                 // looking for the first white pixel
                 if pixel.r > 235 && pixel.b > 235 && pixel.g > 235 {
@@ -455,32 +496,39 @@ impl Image {
                         // Total pixel offsets
                         let x_offset = x * superpixel_width + sub_x;
                         let y_offset = y * superpixel_height + sub_y;
-                        let pixel_offset = y_offset as usize * self.dimensions.0 as usize + x_offset as usize;
+                        let pixel_offset =
+                            y_offset as usize * self.dimensions.0 as usize + x_offset as usize;
                         pixels.push(self.pixels[pixel_offset].value());
                     }
                 }
 
                 // Collect these into counted groups
-                let counted = pixels.into_iter()
-                    .fold(HashMap::new(), |mut acc, pixel| {
-                        *acc.entry(pixel).or_insert(0) += 1;
-                        acc
-                    });
+                let counted = pixels.into_iter().fold(HashMap::new(), |mut acc, pixel| {
+                    *acc.entry(pixel).or_insert(0) += 1;
+                    acc
+                });
 
                 // Final value determined by max membership
-                let superpixel = counted.into_iter().max_by_key(|(_, count)| *count).unwrap().0;
+                let superpixel = counted
+                    .into_iter()
+                    .max_by_key(|(_, count)| *count)
+                    .unwrap()
+                    .0;
                 superpixels.push(superpixel);
             }
         }
 
-        Ok(Payload::from_raw(horizontal_superpixels as u8, superpixels)?)
+        Ok(Payload::from_raw(
+            horizontal_superpixels as u8,
+            superpixels,
+        )?)
     }
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
-    use rand::{Rng};
+    use rand::Rng;
 
     #[test]
     fn affinity_rounding() {
@@ -515,19 +563,29 @@ mod test {
         let mut rng = rand::thread_rng();
 
         let dimensions = (100, 100);
-        let mut origin_image = Image::new(dimensions, std::iter::from_fn(||
-            Some(Pixel {
-                r: rng.gen(),
-                g: rng.gen(),
-                b: rng.gen(),
-                a: rng.gen(),
-            })).take(dimensions.0 as usize * dimensions.1 as usize).collect::<Vec<Pixel>>());
+        let mut origin_image = Image::new(
+            dimensions,
+            std::iter::from_fn(|| {
+                Some(Pixel {
+                    r: rng.gen(),
+                    g: rng.gen(),
+                    b: rng.gen(),
+                    a: rng.gen(),
+                })
+            })
+            .take(dimensions.0 as usize * dimensions.1 as usize)
+            .collect::<Vec<Pixel>>(),
+        );
 
         let data: Vec<u8> = (0..1000).map(|_| rng.gen()).collect();
         let payload = Payload::new(&data);
 
         origin_image.bake_payload(&payload);
-        let read_data = origin_image.read_payload().expect("Could not read payload").data().expect("Could not read data");
+        let read_data = origin_image
+            .read_payload()
+            .expect("Could not read payload")
+            .data()
+            .expect("Could not read data");
         assert_eq!(data, read_data);
     }
 
@@ -537,23 +595,100 @@ mod test {
         let payload = Payload {
             width: 4,
             data: vec![
-                Black, White, Black, Value(0),
-                White, White, Black, Value(1),
-                Black, Black, Black, Value(2),
-                Value(6), Value(5), Value(4), Value(3),
-            ]
+                Black,
+                White,
+                Black,
+                Value(0),
+                White,
+                White,
+                Black,
+                Value(1),
+                Black,
+                Black,
+                Black,
+                Value(2),
+                Value(6),
+                Value(5),
+                Value(4),
+                Value(3),
+            ],
         };
 
-        assert_eq!(vec![Black, White, Black, Value(0)], payload.rows().next().unwrap().copied().collect::<Vec<_>>());
-        assert_eq!(vec![White, White, Black, Value(1)], payload.rows().skip(1).next().unwrap().copied().collect::<Vec<_>>());
-        assert_eq!(vec![Black, Black, Black, Value(2)], payload.rows().skip(2).next().unwrap().copied().collect::<Vec<_>>());
-        assert_eq!(vec![Value(6), Value(5), Value(4), Value(3)], payload.rows().skip(3).next().unwrap().copied().collect::<Vec<_>>());
+        assert_eq!(
+            vec![Black, White, Black, Value(0)],
+            payload.rows().next().unwrap().copied().collect::<Vec<_>>()
+        );
+        assert_eq!(
+            vec![White, White, Black, Value(1)],
+            payload
+                .rows()
+                .skip(1)
+                .next()
+                .unwrap()
+                .copied()
+                .collect::<Vec<_>>()
+        );
+        assert_eq!(
+            vec![Black, Black, Black, Value(2)],
+            payload
+                .rows()
+                .skip(2)
+                .next()
+                .unwrap()
+                .copied()
+                .collect::<Vec<_>>()
+        );
+        assert_eq!(
+            vec![Value(6), Value(5), Value(4), Value(3)],
+            payload
+                .rows()
+                .skip(3)
+                .next()
+                .unwrap()
+                .copied()
+                .collect::<Vec<_>>()
+        );
         assert!(matches!(payload.rows().skip(4).next(), None));
 
-        assert_eq!(vec![Black, White, Black, Value(6)], payload.columns().next().unwrap().copied().collect::<Vec<_>>());
-        assert_eq!(vec![White, White, Black, Value(5)], payload.columns().skip(1).next().unwrap().copied().collect::<Vec<_>>());
-        assert_eq!(vec![Black, Black, Black, Value(4)], payload.columns().skip(2).next().unwrap().copied().collect::<Vec<_>>());
-        assert_eq!(vec![Value(0), Value(1), Value(2), Value(3)], payload.columns().skip(3).next().unwrap().copied().collect::<Vec<_>>());
+        assert_eq!(
+            vec![Black, White, Black, Value(6)],
+            payload
+                .columns()
+                .next()
+                .unwrap()
+                .copied()
+                .collect::<Vec<_>>()
+        );
+        assert_eq!(
+            vec![White, White, Black, Value(5)],
+            payload
+                .columns()
+                .skip(1)
+                .next()
+                .unwrap()
+                .copied()
+                .collect::<Vec<_>>()
+        );
+        assert_eq!(
+            vec![Black, Black, Black, Value(4)],
+            payload
+                .columns()
+                .skip(2)
+                .next()
+                .unwrap()
+                .copied()
+                .collect::<Vec<_>>()
+        );
+        assert_eq!(
+            vec![Value(0), Value(1), Value(2), Value(3)],
+            payload
+                .columns()
+                .skip(3)
+                .next()
+                .unwrap()
+                .copied()
+                .collect::<Vec<_>>()
+        );
         assert!(matches!(payload.columns().skip(4).next(), None));
     }
 
@@ -563,23 +698,67 @@ mod test {
         let mut payload = Payload {
             width: 4,
             data: vec![
-                Value(0), Value(1), Value(2), Value(3),
-                Value(4), Value(5), Value(6), Value(7),
-                Value(8), Value(9), Value(10), Value(11),
-                Value(12), Value(13), Value(14), Value(15),
-            ]
+                Value(0),
+                Value(1),
+                Value(2),
+                Value(3),
+                Value(4),
+                Value(5),
+                Value(6),
+                Value(7),
+                Value(8),
+                Value(9),
+                Value(10),
+                Value(11),
+                Value(12),
+                Value(13),
+                Value(14),
+                Value(15),
+            ],
         };
 
-        assert_eq!(vec![Value(0),
-        Value(1), Value(5), Value(4),
-        Value(2), Value(6), Value(10), Value(9), Value(8),
-        Value(3), Value(7), Value(11), Value(15), Value(14), Value(13), Value(12),
-        ], payload.unraveled_payload());
+        assert_eq!(
+            vec![
+                Value(0),
+                Value(1),
+                Value(5),
+                Value(4),
+                Value(2),
+                Value(6),
+                Value(10),
+                Value(9),
+                Value(8),
+                Value(3),
+                Value(7),
+                Value(11),
+                Value(15),
+                Value(14),
+                Value(13),
+                Value(12),
+            ],
+            payload.unraveled_payload()
+        );
 
-        assert_eq!(vec![&Value(0),
-        &Value(1), &Value(5), &Value(4),
-        &Value(2), &Value(6), &Value(10), &Value(9), &Value(8),
-        &Value(3), &Value(7), &Value(11), &Value(15), &Value(14), &Value(13), &Value(12),
-        ], payload.unraveled_payload_mut());
+        assert_eq!(
+            vec![
+                &Value(0),
+                &Value(1),
+                &Value(5),
+                &Value(4),
+                &Value(2),
+                &Value(6),
+                &Value(10),
+                &Value(9),
+                &Value(8),
+                &Value(3),
+                &Value(7),
+                &Value(11),
+                &Value(15),
+                &Value(14),
+                &Value(13),
+                &Value(12),
+            ],
+            payload.unraveled_payload_mut()
+        );
     }
 }

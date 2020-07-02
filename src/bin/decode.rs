@@ -1,10 +1,10 @@
-use asciimusic::Song;
+use imagemusic::Song;
 use std::env;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().skip(1).collect();
     if args.len() < 1 {
-        panic!("asciimusic {input song}");
+        panic!("imagemusic {input song}");
     }
     let song_base64 = &args[0];
     let compressed = base64::decode_config(&song_base64, base64::URL_SAFE_NO_PAD)?;

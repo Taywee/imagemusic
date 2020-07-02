@@ -5,10 +5,7 @@ pub enum Error {
     NoTargetFound,
     SuperpixelGridNotSquare,
     InvalidDimensions,
-    InvalidLength{
-        encoded: u16,
-        available: u16,
-    },
+    InvalidLength { encoded: u16, available: u16 },
 }
 
 impl fmt::Display for Error {
@@ -17,4 +14,4 @@ impl fmt::Display for Error {
     }
 }
 
-impl std::error::Error for Error{}
+impl std::error::Error for Error {}

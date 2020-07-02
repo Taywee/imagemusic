@@ -1,6 +1,6 @@
-use asciimusic::image::{Image, Payload, Pixel};
-use asciimusic::Song;
 use image::{DynamicImage, RgbaImage};
+use imagemusic::image::{Image, Payload, Pixel};
+use imagemusic::Song;
 use std::env;
 use std::fs;
 use std::io::Read;
@@ -9,7 +9,7 @@ use std::io::Read;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().skip(1).collect();
     if args.len() < 3 {
-        panic!("asciimusic {input song} {input image} {output image}");
+        panic!("imagemusic {input song} {input image} {output image}");
     }
     let songpath = &args[0];
     let inputimagepath = &args[1];
