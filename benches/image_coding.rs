@@ -1,4 +1,4 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{criterion_group, criterion_main, Criterion};
 use imagemusic::image::{Image, Payload, Pixel};
 use rand::Rng;
 
