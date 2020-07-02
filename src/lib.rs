@@ -13,7 +13,9 @@ pub mod voice;
 
 pub use crate::song::Song;
 
+use song::SongIterator;
 use wasm_bindgen::prelude::*;
+use std::ffi::c_void;
 
 #[wasm_bindgen]
 extern "C" {
@@ -36,16 +38,44 @@ pub fn main() -> Result<(), JsValue> {
 }
 
 #[wasm_bindgen]
-pub fn parse_song(input: String) -> Result<*mut Song, JsValue> {
-    let compressed: Result<_, JsValue> =
-        base64::decode_config(input, base64::URL_SAFE_NO_PAD).map_err(|e| format!("{}", e).into());
-    let mut bincode: Vec<u8> = Vec::new();
-    let result: Result<_, JsValue> = brotli::BrotliDecompress(&mut &compressed?[..], &mut bincode)
-        .map_err(|e| format!("{}", e).into());
-    result?;
+pub fn get_bloody_tears() -> Result<*mut Song, JsValue> {
+    let bloody_tears_toml = include_str!("../bloodytears.toml");
     let song: Result<_, JsValue> =
-        bincode::deserialize(&bincode).map_err(|e| format!("{}", e).into());
+        toml::from_str(bloody_tears_toml).map_err(|e| format!("{}", e).into());
     let song = song?;
-    log(&format!("{:#?}", song));
     Ok(Box::into_raw(Box::new(song)))
+}
+
+#[wasm_bindgen]
+pub fn song_free(song: *mut Song) {
+    unsafe {
+        Box::from_raw(song);
+    }
+}
+
+#[wasm_bindgen]
+pub fn song_samples(song: *mut Song) -> *mut c_void {
+    let song = unsafe {
+        &mut *song
+    };
+    let samples = Box::into_raw(Box::new(song.samples()));
+    samples as *mut c_void
+}
+
+#[wasm_bindgen]
+pub fn samples_free(samples: *mut c_void) {
+    unsafe {
+        Box::from_raw(samples as *mut SongIterator<'_>);
+    }
+}
+
+#[wasm_bindgen]
+pub fn samples_next(samples: *mut c_void) -> JsValue {
+    let samples = unsafe {
+        &mut *(samples as *mut SongIterator<'_>)
+    };
+    match samples.next() {
+        Some(sample) => JsValue::from_f64(sample),
+        None => JsValue::null(),
+    }
 }

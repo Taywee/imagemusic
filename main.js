@@ -1,10 +1,31 @@
-import init, { parse_song } from './pkg/asciimusic.js';
+import init, { get_bloody_tears, song_free, song_samples, samples_free, samples_next } from './pkg/imagemusic.js';
 
 async function run() {
     await init();
 
-    const song = parse_song('Gb0RCBwJNq5wO8V321jbhkdCeVPMd9ur5EaiJmr7BGDeR0Mb4hxF3W9_f6q-n41jYjQYsHjQVufiYnWdr4E1G8sLXITiNs5Ea61dGVvkoWjbNEnuMx-v0wAg_ZySmxrzRxtdSB5SQzGSZfYkrRPO9F7omZticeLs6Nyl2_sYL_0kjpjv_Obi1qNn72h8eHRon-vTluLddkncg12IM3ZE9t7dXI6kfw1SjCfaWi8MhuV0k4nwQ-jCSmpsqEftcuPJal3LmYqFnrlWrPilxcniFV-QXh0zXXaKpSej7ygtr6wZj6rcg4kWa5DKWxGjU6Vf6bZes1bJ5EcivwPb4w3uI3cyHRUApqONXFB1ewBc--r0oK1iCADMLLQtG3QUVDAA4GZBNYr56oLTL2u4YziwnWdOgD1OB-x-KmApjKfihq7HyjomP0_6rxjkGqpINGibAUG20EAsrWQyLLJnwx-mrg3d931WrbrFzXy5M_aj');
-    console.log(song);
+    const song = get_bloody_tears();
+    const samples = song_samples(song);
+    var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    var myArrayBuffer = audioCtx.createBuffer(1, 44100 * 10, 44100);
+    var channel = myArrayBuffer.getChannelData(0);
+
+    let sample;
+    let i = 0;
+    while ((sample = samples_next(samples)) !== null) {
+        channel[i] = sample;
+        i += 1;
+        if (i >= 441000) {
+            break;
+        }
+    }
+
+    samples_free(samples);
+    song_free(song);
+
+    var source = audioCtx.createBufferSource();
+    source.buffer = myArrayBuffer;
+    source.connect(audioCtx.destination);
+    source.start();
 }
 
 run();
