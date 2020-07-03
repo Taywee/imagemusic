@@ -8,10 +8,10 @@ pub struct Point {
     /// Stop point in seconds.  May be positive to be distance from the beginning and negative to
     /// be distance from the end.  If these overlap, the envelope will change shape in ways that
     /// may be unpredictable, because they will reorder automatically.
-    pub stop: f64,
+    pub stop: f32,
 
     /// Height of the wave at this stop
-    pub amplitude: f64,
+    pub amplitude: f32,
 }
 
 impl ser::Serialize for Point {
@@ -43,8 +43,8 @@ impl<'de> de::Visitor<'de> for PointVisitor {
         let stop = stop.ok_or_else(|| A::Error::invalid_length(0, &self))?;
         let amplitude: Option<u8> = seq.next_element()?;
         let amplitude = amplitude.ok_or_else(|| A::Error::invalid_length(1, &self))?;
-        let stop = stop as f64 / 100.0;
-        let amplitude = amplitude as f64 / 255.0;
+        let stop = stop as f32 / 100.0;
+        let amplitude = amplitude as f32 / 255.0;
         Ok(dbg!(Point { stop, amplitude }))
     }
 }
@@ -85,12 +85,12 @@ impl Default for Envelope {
 }
 
 #[inline]
-fn lerp(x: f64, a: (f64, f64), b: (f64, f64)) -> f64 {
+fn lerp(x: f32, a: (f32, f32), b: (f32, f32)) -> f32 {
     a.1 + (x - a.0) * (b.1 - a.1) / (b.0 - a.0)
 }
 
 impl Envelope {
-    pub fn amplitude_at_time(&self, note_length: f64, time_point: f64) -> f64 {
+    pub fn amplitude_at_time(&self, note_length: f32, time_point: f32) -> f32 {
         if self.0.len() == 0 {
             // This should never happen, as an empty envelope will be prevented
             panic!("An envelope should never be empty.");

@@ -37,11 +37,11 @@ pub fn main() -> Result<(), JsValue> {
     Ok(())
 }
 
+/// Read a toml string into a song
 #[wasm_bindgen]
-pub fn get_bloody_tears() -> Result<*mut Song, JsValue> {
-    let bloody_tears_toml = include_str!("../bloodytears.toml");
+pub fn song_from_toml(toml: &str) -> Result<*mut Song, JsValue> {
     let song: Result<_, JsValue> =
-        toml::from_str(bloody_tears_toml).map_err(|e| format!("{}", e).into());
+        toml::from_str(toml).map_err(|e| format!("{}", e).into());
     let song = song?;
     Ok(Box::into_raw(Box::new(song)))
 }
@@ -54,11 +54,11 @@ pub fn song_free(song: *mut Song) {
 }
 
 #[wasm_bindgen]
-pub fn song_samples(song: *mut Song) -> *mut c_void {
+pub fn song_samples(song: *mut Song, sample_rate: u32) -> *mut c_void {
     let song = unsafe {
         &mut *song
     };
-    let samples = Box::into_raw(Box::new(song.samples()));
+    let samples = Box::into_raw(Box::new(song.samples(sample_rate as usize)));
     samples as *mut c_void
 }
 
@@ -75,7 +75,7 @@ pub fn samples_next(samples: *mut c_void) -> JsValue {
         &mut *(samples as *mut SongIterator<'_>)
     };
     match samples.next() {
-        Some(sample) => JsValue::from_f64(sample),
+        Some(sample) => JsValue::from_f64(sample as f64),
         None => JsValue::null(),
     }
 }

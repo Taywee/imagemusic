@@ -18,14 +18,14 @@ pub struct Song {
 
 pub struct SongIterator<'a> {
     voice_iterators: Vec<VoiceIterator<'a>>,
-    volume_modifier: f64,
+    volume_modifier: f32,
     voice_count: usize,
 }
 
 impl<'a> Iterator for SongIterator<'a> {
-    type Item = f64;
+    type Item = f32;
 
-    fn next(&mut self) -> Option<f64> {
+    fn next(&mut self) -> Option<f32> {
         if self.voice_iterators.is_empty() {
             return None;
         }
@@ -44,7 +44,7 @@ impl<'a> Iterator for SongIterator<'a> {
             self.voice_iterators.remove(removal);
         }
 
-        sample *= self.volume_modifier / self.voice_count as f64;
+        sample *= self.volume_modifier / self.voice_count as f32;
 
         if sample > 1.0 {
             Some(1.0)
@@ -57,18 +57,18 @@ impl<'a> Iterator for SongIterator<'a> {
 }
 
 impl Song {
-    pub fn voice_iterators(&self) -> Vec<VoiceIterator<'_>> {
+    pub fn voice_iterators(&self, sample_rate: usize) -> Vec<VoiceIterator<'_>> {
         self.voices
             .iter()
-            .map(|voice| VoiceIterator::new(voice, 1.0 / self.ticks_per_second as f64))
+            .map(|voice| VoiceIterator::new(voice, 1.0 / self.ticks_per_second as f32, sample_rate))
             .collect()
     }
 
-    /** Render the song as f64 samples.
+    /** Render the song as f32 samples.
      */
-    pub fn samples(&mut self) -> SongIterator<'_> {
-        let voice_iterators = self.voice_iterators();
-        let volume_modifier = 1.0 / (voice_iterators.len() as f64);
+    pub fn samples(&mut self, sample_rate: usize) -> SongIterator<'_> {
+        let voice_iterators = self.voice_iterators(sample_rate);
+        let volume_modifier = 1.0 / (voice_iterators.len() as f32);
         SongIterator {
             voice_count: self.voices.len(),
             voice_iterators,

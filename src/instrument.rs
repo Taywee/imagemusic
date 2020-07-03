@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use std::f64;
+use std::f32;
 
 #[derive(Debug, Serialize, Deserialize, Copy, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Instrument {
@@ -16,10 +16,10 @@ impl Default for Instrument {
 }
 
 impl Instrument {
-    pub fn sample(self, ramp: f64) -> f64 {
+    pub fn sample(self, ramp: f32) -> f32 {
         match self {
             Instrument::Sawtooth => ramp * 2.0 - 1.0,
-            Instrument::Sine => (ramp * f64::consts::PI * 2.0).sin(),
+            Instrument::Sine => (ramp * f32::consts::PI * 2.0).sin(),
             Instrument::Square => {
                 if ramp >= 0.5 {
                     1.0

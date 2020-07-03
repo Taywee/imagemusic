@@ -3,8 +3,6 @@ use crate::instrument::Instrument;
 use crate::note::{Note, Notes};
 use serde::{Deserialize, Serialize};
 
-const SAMPLE_RATE: f64 = 44100.0;
-
 fn default_volume() -> u8 {
     u8::MAX
 }
@@ -34,17 +32,19 @@ pub struct VoiceIterator<'a> {
     pub note_samples: u64,
     pub note_current_sample: u64,
     pub done: bool,
-    pub seconds_per_beat: f64,
+    pub seconds_per_beat: f32,
 
-    pub ramp: f64,
-    pub volume: f64,
+    pub ramp: f32,
+    pub volume: f32,
 
     // Used to generate the current sample
-    pub frequency: Option<f64>,
+    pub frequency: Option<f32>,
+
+    pub sample_rate: usize,
 }
 
 impl<'a> VoiceIterator<'a> {
-    pub fn new(voice: &'a Voice, seconds_per_beat: f64) -> VoiceIterator<'a> {
+    pub fn new(voice: &'a Voice, seconds_per_beat: f32, sample_rate: usize) -> VoiceIterator<'a> {
         VoiceIterator {
             instrument: voice.instrument,
             envelope: &voice.envelope,
@@ -53,17 +53,18 @@ impl<'a> VoiceIterator<'a> {
             note_current_sample: 0,
             done: false,
             seconds_per_beat,
-            volume: 255.0 / voice.volume as f64,
+            volume: 255.0 / voice.volume as f32,
             ramp: 0.0,
             frequency: None,
+            sample_rate,
         }
     }
 }
 
 impl<'a> Iterator for VoiceIterator<'a> {
-    type Item = f64;
+    type Item = f32;
 
-    fn next(&mut self) -> Option<f64> {
+    fn next(&mut self) -> Option<f32> {
         if self.done {
             return None;
         }
@@ -75,7 +76,7 @@ impl<'a> Iterator for VoiceIterator<'a> {
             match self.note_iterator.next() {
                 Some(note) => {
                     self.note_samples =
-                        (self.seconds_per_beat * SAMPLE_RATE) as u64 * (note.length as u64);
+                        (self.seconds_per_beat * self.sample_rate as f32) as u64 * (note.length as u64);
                     self.frequency = note.frequency();
                 }
                 None => {
@@ -92,15 +93,15 @@ impl<'a> Iterator for VoiceIterator<'a> {
         if let Some(frequency) = self.frequency {
             self.ramp += frequency;
 
-            while self.ramp >= SAMPLE_RATE {
-                self.ramp -= SAMPLE_RATE;
+            while self.ramp >= self.sample_rate as f32 {
+                self.ramp -= self.sample_rate as f32;
             }
 
-            sample += self.instrument.sample(self.ramp / SAMPLE_RATE)
+            sample += self.instrument.sample(self.ramp / self.sample_rate as f32)
                 * self.volume
                 * self.envelope.amplitude_at_time(
-                    self.note_samples as f64 / SAMPLE_RATE,
-                    self.note_current_sample as f64 / SAMPLE_RATE,
+                    self.note_samples as f32 / self.sample_rate as f32,
+                    self.note_current_sample as f32 / self.sample_rate as f32,
                 );
         } else {
             self.ramp = 0.0;

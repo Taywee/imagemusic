@@ -212,11 +212,11 @@ pub struct Note {
 }
 
 impl Note {
-    pub fn frequency(self) -> Option<f64> {
+    pub fn frequency(self) -> Option<f32> {
         match self.name {
             NoteName::Rest => None,
             name => {
-                Some(16.0 * 2.0f64.powf((self.octave as i8 * 12 + name.exponent()) as f64 / 12.0))
+                Some(16.0 * 2.0f32.powf((self.octave as i8 * 12 + name.exponent()) as f32 / 12.0))
             }
         }
     }

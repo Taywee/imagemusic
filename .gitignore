@@ -3,3 +3,6 @@
 *.mid
 *.raw
 /pkg
+
+# Typescript
+/main.js
