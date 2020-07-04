@@ -7,6 +7,7 @@
 pub mod envelope;
 pub mod image;
 pub mod instrument;
+pub mod musicxml;
 pub mod note;
 pub mod song;
 pub mod voice;
@@ -14,8 +15,8 @@ pub mod voice;
 pub use crate::song::Song;
 
 use song::SongIterator;
-use wasm_bindgen::prelude::*;
 use std::ffi::c_void;
+use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 extern "C" {
@@ -40,8 +41,7 @@ pub fn main() -> Result<(), JsValue> {
 /// Read a toml string into a song
 #[wasm_bindgen]
 pub fn song_from_toml(toml: &str) -> Result<*mut Song, JsValue> {
-    let song: Result<_, JsValue> =
-        toml::from_str(toml).map_err(|e| format!("{}", e).into());
+    let song: Result<_, JsValue> = toml::from_str(toml).map_err(|e| format!("{}", e).into());
     let song = song?;
     Ok(Box::into_raw(Box::new(song)))
 }
@@ -55,9 +55,7 @@ pub fn song_free(song: *mut Song) {
 
 #[wasm_bindgen]
 pub fn song_samples(song: *mut Song, sample_rate: u32) -> *mut c_void {
-    let song = unsafe {
-        &mut *song
-    };
+    let song = unsafe { &mut *song };
     let samples = Box::into_raw(Box::new(song.samples(sample_rate as usize)));
     samples as *mut c_void
 }
@@ -71,9 +69,7 @@ pub fn samples_free(samples: *mut c_void) {
 
 #[wasm_bindgen]
 pub fn samples_next(samples: *mut c_void) -> JsValue {
-    let samples = unsafe {
-        &mut *(samples as *mut SongIterator<'_>)
-    };
+    let samples = unsafe { &mut *(samples as *mut SongIterator<'_>) };
     match samples.next() {
         Some(sample) => JsValue::from_f64(sample as f64),
         None => JsValue::null(),

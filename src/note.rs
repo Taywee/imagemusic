@@ -6,7 +6,7 @@ use std::fmt;
 use std::ops::{Deref, DerefMut};
 
 /// -is is sharp -es is flat
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum NoteName {
     Rest,
     C,
@@ -152,6 +152,92 @@ impl NoteName {
             Bisis => "bisis",
         }
     }
+
+    /// Sharpen by one level.  Double sharps and rests will panic.
+    pub fn sharpen(self) -> Self {
+        use NoteName::*;
+        match self {
+            Rest => panic!(),
+            Ceses => Ces,
+            Ces => C,
+            C => Cis,
+            Cis => Cisis,
+            Cisis => panic!("Can not sharpen anymore"),
+            Deses => Des,
+            Des => D,
+            D => Dis,
+            Dis => Disis,
+            Disis => panic!("Can not sharpen anymore"),
+            Eses => Es,
+            Es => E,
+            E => Eis,
+            Eis => Eisis,
+            Eisis => panic!("Can not sharpen anymore"),
+            Feses => Fes,
+            Fes => F,
+            F => Fis,
+            Fis => Fisis,
+            Fisis => panic!("Can not sharpen anymore"),
+            Geses => Ges,
+            Ges => G,
+            G => Gis,
+            Gis => Gisis,
+            Gisis => panic!("Can not sharpen anymore"),
+            Ases => As,
+            As => A,
+            A => Ais,
+            Ais => Aisis,
+            Aisis => panic!("Can not sharpen anymore"),
+            Beses => Bes,
+            Bes => B,
+            B => Bis,
+            Bis => Bisis,
+            Bisis => panic!("Can not sharpen anymore"),
+        }
+    }
+
+    /// Flatten by one level.  Double flats and rests will panic.
+    pub fn flatten(self) -> Self {
+        use NoteName::*;
+        match self {
+            Rest => panic!(),
+            Ceses => panic!("Can not flatten anymore"),
+            Ces => Ceses,
+            C => Ces,
+            Cis => C,
+            Cisis => Cis,
+            Deses => panic!("Can not flatten anymore"),
+            Des => Deses,
+            D => Des,
+            Dis => D,
+            Disis => Dis,
+            Eses => panic!("Can not flatten anymore"),
+            Es => Eses,
+            E => Es,
+            Eis => E,
+            Eisis => Eis,
+            Feses => panic!("Can not flatten anymore"),
+            Fes => Feses,
+            F => Fes,
+            Fis => F,
+            Fisis => Fis,
+            Geses => panic!("Can not flatten anymore"),
+            Ges => Geses,
+            G => Ges,
+            Gis => G,
+            Gisis => Gis,
+            Ases => panic!("Can not flatten anymore"),
+            As => Ases,
+            A => As,
+            Ais => A,
+            Aisis => Ais,
+            Beses => panic!("Can not flatten anymore"),
+            Bes => Beses,
+            B => Bes,
+            Bis => B,
+            Bisis => Bis,
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -204,9 +290,9 @@ impl std::str::FromStr for NoteName {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub struct Note {
-    pub length: u8,
+    pub length: u16,
     pub name: NoteName,
     pub octave: u8,
 }
@@ -229,7 +315,7 @@ impl Note {
         }
     }
 
-    pub fn from_length_pitch(length: u8, pitch: Option<u8>) -> Self {
+    pub fn from_length_pitch(length: u16, pitch: Option<u8>) -> Self {
         Note {
             length,
             name: pitch
@@ -284,7 +370,7 @@ impl<'de> de::Visitor<'de> for StrNoteVisitor {
         let note = NOTE_PATTERN
             .with(|note_pattern| {
                 note_pattern.captures(value).map(|captures| {
-                    let length: u8 = captures.get(1).unwrap().as_str().parse().unwrap();
+                    let length: u16 = captures.get(1).unwrap().as_str().parse().unwrap();
                     let (name, octave) = match captures.get(2).unwrap().as_str() {
                         "r" => (NoteName::Rest, 0),
                         _ => (
@@ -317,7 +403,7 @@ impl<'de> de::Visitor<'de> for BinNoteVisitor {
         A: de::SeqAccess<'de>,
     {
         use de::Error;
-        let length: Option<u8> = seq.next_element()?;
+        let length: Option<u16> = seq.next_element()?;
         let length = length.ok_or_else(|| A::Error::invalid_length(0, &self))?;
         let pitch: Option<u8> = seq.next_element()?;
         let pitch = pitch.ok_or_else(|| A::Error::invalid_length(1, &self))?;
@@ -343,7 +429,7 @@ impl<'de> de::Deserialize<'de> for Note {
 
 /// Simple wrapper around a note sequence that allows for compact string-only serialization and
 /// deserialization
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Notes(pub Vec<Note>);
 
 impl Deref for Notes {
