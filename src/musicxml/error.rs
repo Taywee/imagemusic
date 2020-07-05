@@ -3,7 +3,7 @@ use std::num::ParseIntError;
 
 #[derive(Debug, Clone)]
 pub enum Error {
-    InvalidMusicXML,
+    InvalidMusicXML(&'static str),
     BadNumber(ParseIntError),
 }
 

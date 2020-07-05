@@ -66,7 +66,7 @@ impl Song {
 
     /** Render the song as f32 samples.
      */
-    pub fn samples(&mut self, sample_rate: usize) -> SongIterator<'_> {
+    pub fn samples(&self, sample_rate: usize) -> SongIterator<'_> {
         let voice_iterators = self.voice_iterators(sample_rate);
         let volume_modifier = 1.0 / (voice_iterators.len() as f32);
         SongIterator {

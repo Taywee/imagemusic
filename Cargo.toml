@@ -63,3 +63,7 @@ features = ['small_rng']
 [[bench]]
 name = "image_coding"
 harness = false
+
+[[bench]]
+name = "render_song"
+harness = false

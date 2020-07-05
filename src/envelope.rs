@@ -2,6 +2,7 @@ use serde::de::{self, Error};
 use serde::ser::{self, SerializeTuple};
 use serde::{Deserialize, Serialize};
 use std::fmt;
+use std::cell::RefCell;
 
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
 pub struct Point {
@@ -58,29 +59,87 @@ impl<'de> de::Deserialize<'de> for Point {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
-pub struct Envelope(pub Vec<Point>);
+#[derive(Debug, Clone, PartialEq)]
+pub struct Envelope{
+    pub points: Vec<Point>,
+    
+    // Specific points for note
+    note_points: RefCell<Vec<Point>>,
+}
+
+impl ser::Serialize for Envelope {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: ser::Serializer,
+    {
+        use ser::SerializeSeq;
+        let mut seq = serializer.serialize_seq(Some(self.points.len()))?;
+        for point in &self.points {
+            seq.serialize_element(point)?;
+        }
+        seq.end()
+    }
+}
+
+struct EnvelopeVisitor;
+
+impl<'de> de::Visitor<'de> for EnvelopeVisitor {
+    type Value = Envelope;
+
+    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str("A sequence of points")
+    }
+
+    fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+    where
+        A: de::SeqAccess<'de>,
+    {
+        let mut points = match seq.size_hint() {
+            Some(size) => Vec::with_capacity(size),
+            None => Vec::new(),
+        };
+        while let Some(point) = seq.next_element()? {
+            points.push(point);
+        }
+        Ok(dbg!(Envelope {
+            points,
+            note_points: RefCell::new(Vec::new()),
+        }))
+    }
+}
+
+impl<'de> de::Deserialize<'de> for Envelope {
+    fn deserialize<D>(deserializer: D) -> Result<Envelope, D::Error>
+    where
+        D: de::Deserializer<'de>,
+    {
+        deserializer.deserialize_seq(EnvelopeVisitor)
+    }
+}
 
 impl Default for Envelope {
     fn default() -> Self {
-        Envelope(vec![
-            Point {
-                stop: 0.0,
-                amplitude: 0.0,
-            },
-            Point {
-                stop: 0.05,
-                amplitude: 1.0,
-            },
-            Point {
-                stop: -0.05,
-                amplitude: 0.8,
-            },
-            Point {
-                stop: -0.01,
-                amplitude: 0.0,
-            },
-        ])
+        Envelope{
+            points: vec![
+                Point {
+                    stop: 0.0,
+                    amplitude: 0.0,
+                },
+                Point {
+                    stop: 0.05,
+                    amplitude: 1.0,
+                },
+                Point {
+                    stop: -0.05,
+                    amplitude: 0.8,
+                },
+                Point {
+                    stop: -0.01,
+                    amplitude: 0.0,
+                },
+            ],
+            note_points: RefCell::new(Vec::new()),
+        }
     }
 }
 
@@ -90,20 +149,15 @@ fn lerp(x: f32, a: (f32, f32), b: (f32, f32)) -> f32 {
 }
 
 impl Envelope {
-    pub fn amplitude_at_time(&self, note_length: f32, time_point: f32) -> f32 {
-        if self.0.len() == 0 {
-            // This should never happen, as an empty envelope will be prevented
-            panic!("An envelope should never be empty.");
-        }
-
-        if self.0.len() == 1 {
-            return self.0.get(0).unwrap().amplitude;
+    pub fn prepare_note(&self, note_length: f32) {
+        if self.points.len() == 1 {
+            return;
         }
 
         // Envelope points are made absolute here (all to time from beginning).  Also remove points
         // with a stop outside the note's range.
         let mut points: Vec<Point> = self
-            .0
+            .points
             .iter()
             .filter_map(|point| {
                 let stop = if point.stop < 0.0 {
@@ -134,15 +188,25 @@ impl Envelope {
             }
         });
 
+        let mut note_points = self.note_points.borrow_mut();
+        *note_points = points;
+    }
+
+    pub fn amplitude_at_time(&self, time_point: f32) -> f32 {
+        if self.points.len() == 1 {
+            return self.points.get(0).unwrap().amplitude;
+        }
+
+        let points = self.note_points.borrow();
+
         // Can probably make all of this much nicer.
         if points.first().unwrap().stop >= time_point {
             points.first().unwrap().amplitude
         } else if points.last().unwrap().stop <= time_point {
             points.last().unwrap().amplitude
         } else {
-            for i in 1..points.len() {
-                let first = points.get(i - 1).unwrap();
-                let second = points.get(i).unwrap();
+            for window in points.windows(2) {
+                let (first, second) = (window[0], window[1]);
                 if first.stop <= time_point && time_point <= second.stop {
                     return lerp(
                         time_point,

@@ -53,25 +53,12 @@ pub fn song_free(song: *mut Song) {
     }
 }
 
+// Get all samples from a song
 #[wasm_bindgen]
-pub fn song_samples(song: *mut Song, sample_rate: u32) -> *mut c_void {
+pub fn song_samples(song: *mut Song, sample_rate: u32) -> Vec<f32> {
     let song = unsafe { &mut *song };
-    let samples = Box::into_raw(Box::new(song.samples(sample_rate as usize)));
-    samples as *mut c_void
-}
-
-#[wasm_bindgen]
-pub fn samples_free(samples: *mut c_void) {
-    unsafe {
-        Box::from_raw(samples as *mut SongIterator<'_>);
-    }
-}
-
-#[wasm_bindgen]
-pub fn samples_next(samples: *mut c_void) -> JsValue {
-    let samples = unsafe { &mut *(samples as *mut SongIterator<'_>) };
-    match samples.next() {
-        Some(sample) => JsValue::from_f64(sample as f64),
-        None => JsValue::null(),
-    }
+    log("getting samples");
+    let samples = song.samples(sample_rate as usize).collect();
+    log("got samples");
+    samples
 }

@@ -29,8 +29,8 @@ pub struct VoiceIterator<'a> {
     pub instrument: Instrument,
     pub envelope: &'a Envelope,
     pub note_iterator: Box<dyn Iterator<Item = &'a Note> + 'a>,
-    pub note_samples: u64,
-    pub note_current_sample: u64,
+    pub note_samples: u32,
+    pub note_current_sample: u32,
     pub done: bool,
     pub seconds_per_beat: f32,
 
@@ -40,7 +40,8 @@ pub struct VoiceIterator<'a> {
     // Used to generate the current sample
     pub frequency: Option<f32>,
 
-    pub sample_rate: usize,
+    pub sample_rate: f32,
+    pub inverse_sample_rate: f32,
 }
 
 impl<'a> VoiceIterator<'a> {
@@ -56,7 +57,8 @@ impl<'a> VoiceIterator<'a> {
             volume: 255.0 / voice.volume as f32,
             ramp: 0.0,
             frequency: None,
-            sample_rate,
+            sample_rate: sample_rate as f32,
+            inverse_sample_rate: 1.0 / sample_rate as f32,
         }
     }
 }
@@ -75,8 +77,9 @@ impl<'a> Iterator for VoiceIterator<'a> {
 
             match self.note_iterator.next() {
                 Some(note) => {
-                    self.note_samples = (self.seconds_per_beat * self.sample_rate as f32) as u64
-                        * (note.length as u64);
+                    self.envelope.prepare_note(self.seconds_per_beat * note.length as f32);
+                    self.note_samples = (self.seconds_per_beat * self.sample_rate) as u32
+                        * note.length as u32;
                     self.frequency = note.frequency();
                 }
                 None => {
@@ -93,16 +96,13 @@ impl<'a> Iterator for VoiceIterator<'a> {
         if let Some(frequency) = self.frequency {
             self.ramp += frequency;
 
-            while self.ramp >= self.sample_rate as f32 {
-                self.ramp -= self.sample_rate as f32;
+            while self.ramp >= self.sample_rate {
+                self.ramp -= self.sample_rate;
             }
 
-            sample += self.instrument.sample(self.ramp / self.sample_rate as f32)
+            sample += self.instrument.sample(self.ramp * self.inverse_sample_rate)
                 * self.volume
-                * self.envelope.amplitude_at_time(
-                    self.note_samples as f32 / self.sample_rate as f32,
-                    self.note_current_sample as f32 / self.sample_rate as f32,
-                );
+                * self.envelope.amplitude_at_time(self.note_current_sample as f32 * self.inverse_sample_rate);
         } else {
             self.ramp = 0.0;
         }
