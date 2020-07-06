@@ -150,10 +150,6 @@ fn lerp(x: f32, a: (f32, f32), b: (f32, f32)) -> f32 {
 
 impl Envelope {
     pub fn prepare_note(&self, note_length: f32) {
-        if self.points.len() == 1 {
-            return;
-        }
-
         // Envelope points are made absolute here (all to time from beginning).  Also remove points
         // with a stop outside the note's range.
         let mut points: Vec<Point> = self
@@ -193,11 +189,7 @@ impl Envelope {
     }
 
     pub fn amplitude_at_time(&self, time_point: f32) -> f32 {
-        if self.points.len() == 1 {
-            return self.points.get(0).unwrap().amplitude;
-        }
-
-        let points = self.note_points.borrow();
+        let mut points = self.note_points.borrow_mut();
 
         // Can probably make all of this much nicer.
         if points.first().unwrap().stop >= time_point {
@@ -205,18 +197,18 @@ impl Envelope {
         } else if points.last().unwrap().stop <= time_point {
             points.last().unwrap().amplitude
         } else {
-            for window in points.windows(2) {
-                let (first, second) = (window[0], window[1]);
+            loop {
+                let (first, second) = (&points[0], &points[1]);
                 if first.stop <= time_point && time_point <= second.stop {
                     return lerp(
                         time_point,
                         (first.stop, first.amplitude),
                         (second.stop, second.amplitude),
                     );
+                } else {
+                    points.remove(0);
                 }
             }
-
-            unreachable!();
         }
     }
 }

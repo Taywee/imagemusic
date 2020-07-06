@@ -55,8 +55,8 @@ pub fn song_free(song: *mut Song) {
 #[wasm_bindgen]
 pub fn song_samples(song: *mut Song, sample_rate: u32) -> Vec<f32> {
     let song = unsafe { &mut *song };
-    log("getting samples");
-    let samples = song.samples(sample_rate as usize).collect();
-    log("got samples");
+    // Just allocate enough for a minute
+    let mut samples = Vec::with_capacity(60 * sample_rate as usize);
+    samples.extend(song.samples(sample_rate as usize));
     samples
 }

@@ -23,8 +23,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         compressor.read_to_end(&mut compressed)?;
     }
 
-    dbg!(compressed.len());
-
     let payload = Payload::new(&compressed);
 
     let image = image::open(inputimagepath)?;
