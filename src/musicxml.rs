@@ -51,10 +51,8 @@ impl TryFrom<&Element> for Note {
     type Error = Error;
 
     fn try_from(element: &Element) -> Result<Self, Self::Error> {
-        if let Some(_) = element
-            .children()
-            .find(|e| e.name() == "grace") {
-                return Err(Error::GraceNote);
+        if let Some(_) = element.children().find(|e| e.name() == "grace") {
+            return Err(Error::GraceNote);
         }
 
         let duration = element
@@ -298,9 +296,7 @@ pub fn from_musicxml(root: Element) -> Result<crate::Song, Error> {
         .children()
         .find(|e| e.name() == "attributes")
         .ok_or(Error::InvalidMusicXML("Could not find the attributes"))?;
-    let direction = first_measure
-        .children()
-        .find(|e| e.name() == "direction");
+    let direction = first_measure.children().find(|e| e.name() == "direction");
 
     // Divisions of quarter notes.
     let divisions: usize = attributes
@@ -336,13 +332,14 @@ pub fn from_musicxml(root: Element) -> Result<crate::Song, Error> {
         .parse()?;
 
     let tempo: usize = direction
-        .and_then(|direction|
-            direction.children()
-            .find(|e| e.name() == "sound")
-            .and_then(|sound|
-                sound.attr("tempo")
-            )
-        ).unwrap_or("100").parse()?;
+        .and_then(|direction| {
+            direction
+                .children()
+                .find(|e| e.name() == "sound")
+                .and_then(|sound| sound.attr("tempo"))
+        })
+        .unwrap_or("100")
+        .parse()?;
 
     let divisions_per_measure = divisions * 4 * beats / beat_type;
     let divisions_per_second = (divisions * tempo) as f32 / 60.0;
@@ -366,7 +363,6 @@ pub fn from_musicxml(root: Element) -> Result<crate::Song, Error> {
 
     // Turn a Song into a vec of voices, dropping measures and parts
     let voices = song.as_voices();
-
 
     // Totally disassembled voices, with all chords torn apart.
     let mut output_voices = Vec::new();
@@ -455,11 +451,14 @@ pub fn from_musicxml(root: Element) -> Result<crate::Song, Error> {
 
     Ok(crate::Song {
         ticks_per_second: divisions_per_second,
-        voices: output_voices.into_iter().map(|notes| crate::voice::Voice {
-            volume: u8::MAX,
-            instrument: crate::instrument::Instrument::Sawtooth,
-            notes: crate::note::Notes(notes.into_iter().map(Note::into).collect()),
-            envelope: Default::default(),
-        }).collect(),
+        voices: output_voices
+            .into_iter()
+            .map(|notes| crate::voice::Voice {
+                volume: u8::MAX,
+                instrument: crate::instrument::Instrument::Sawtooth,
+                notes: crate::note::Notes(notes.into_iter().map(Note::into).collect()),
+                envelope: Default::default(),
+            })
+            .collect(),
     })
 }
