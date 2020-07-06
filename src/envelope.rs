@@ -101,10 +101,10 @@ impl<'de> de::Visitor<'de> for EnvelopeVisitor {
         while let Some(point) = seq.next_element()? {
             points.push(point);
         }
-        Ok(dbg!(Envelope {
+        Ok(Envelope {
             points,
             note_points: RefCell::new(Vec::new()),
-        }))
+        })
     }
 }
 

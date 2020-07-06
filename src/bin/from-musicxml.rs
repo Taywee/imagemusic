@@ -12,7 +12,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let songpath = &args[0];
     let xml = fs::read_to_string(songpath)?;
     let root: Element = xml.parse()?;
-    let _song = musicxml::from_musicxml(root);
+    let song = musicxml::from_musicxml(root)?;
+
+    let toml = toml::to_string(&song)?;
+    println!("{}", toml);
 
     Ok(())
 }

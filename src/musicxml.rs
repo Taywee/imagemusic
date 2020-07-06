@@ -20,6 +20,16 @@ struct Note {
     voice: Voice,
 }
 
+impl From<Note> for crate::note::Note {
+    fn from(note: Note) -> Self {
+        crate::note::Note {
+            length: note.duration as u32,
+            name: note.name,
+            octave: note.octave,
+        }
+    }
+}
+
 impl Note {
     // Construct a rest of the given duration
     fn rest(duration: usize) -> Self {
@@ -68,15 +78,15 @@ impl TryFrom<&Element> for Note {
             let mut name: NoteName = pitch
                 .children()
                 .find(|e| e.name() == "step")
-                .ok_or(Error::InvalidMusicXML("Could not find pitch step"))?
+                .ok_or(Error::InvalidMusicXML("Could not find note step"))?
                 .text()
                 .to_lowercase()
                 .parse()?;
 
-            let octave = element
+            let octave = pitch
                 .children()
                 .find(|e| e.name() == "octave")
-                .ok_or(Error::InvalidMusicXML("Could not find note ectave"))?
+                .ok_or(Error::InvalidMusicXML("Could not find note octave"))?
                 .text()
                 .parse()?;
 
@@ -328,7 +338,7 @@ pub fn from_musicxml(root: Element) -> Result<crate::Song, Error> {
         .parse()?;
 
     let divisions_per_measure = divisions * 4 * beats / beat_type;
-    let _divisions_per_second = (divisions * tempo) as f64 / 60.0;
+    let divisions_per_second = (divisions * tempo) as f32 / 60.0;
 
     // id -> name
     let mut part_names: HashMap<String, String> = HashMap::new();
@@ -350,9 +360,12 @@ pub fn from_musicxml(root: Element) -> Result<crate::Song, Error> {
     // Turn a Song into a vec of voices, dropping measures and parts
     let voices = song.as_voices();
 
-    let mut note_offset = 0;
+
+    // Totally disassembled voices, with all chords torn apart.
+    let mut output_voices = Vec::new();
 
     for voice in voices {
+        let mut note_offset = 0;
         // chords in voice split into individual tracks
         let mut chord_voices: Vec<Vec<Note>> = Vec::new();
         for chord in voice {
@@ -426,6 +439,20 @@ pub fn from_musicxml(root: Element) -> Result<crate::Song, Error> {
 
             chord_voices.extend_from_slice(&new_voices);
         }
+
+        output_voices.extend_from_slice(&chord_voices);
     }
-    unimplemented!()
+
+    // TODO: exit error if there are any uncompleted ties
+    // TODO: optimize rests by combining adjacent ones in any voice
+
+    Ok(crate::Song {
+        ticks_per_second: divisions_per_second,
+        voices: output_voices.into_iter().map(|notes| crate::voice::Voice {
+            volume: u8::MAX,
+            instrument: crate::instrument::Instrument::Sawtooth,
+            notes: crate::note::Notes(notes.into_iter().map(Note::into).collect()),
+            envelope: Default::default(),
+        }).collect(),
+    })
 }

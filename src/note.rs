@@ -292,7 +292,7 @@ impl std::str::FromStr for NoteName {
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub struct Note {
-    pub length: u16,
+    pub length: u32,
     pub name: NoteName,
     pub octave: u8,
 }
@@ -315,7 +315,7 @@ impl Note {
         }
     }
 
-    pub fn from_length_pitch(length: u16, pitch: Option<u8>) -> Self {
+    pub fn from_length_pitch(length: u32, pitch: Option<u8>) -> Self {
         Note {
             length,
             name: pitch
@@ -328,7 +328,11 @@ impl Note {
 
 impl fmt::Display for Note {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}{}", self.length, self.name.name(), self.octave)
+        if self.name == NoteName::Rest {
+            write!(f, "{}r", self.length)
+        } else {
+            write!(f, "{}{}{}", self.length, self.name.name(), self.octave)
+        }
     }
 }
 
@@ -370,7 +374,7 @@ impl<'de> de::Visitor<'de> for StrNoteVisitor {
         let note = NOTE_PATTERN
             .with(|note_pattern| {
                 note_pattern.captures(value).map(|captures| {
-                    let length: u16 = captures.get(1).unwrap().as_str().parse().unwrap();
+                    let length: u32 = captures.get(1).unwrap().as_str().parse().unwrap();
                     let (name, octave) = match captures.get(2).unwrap().as_str() {
                         "r" => (NoteName::Rest, 0),
                         _ => (
@@ -403,7 +407,7 @@ impl<'de> de::Visitor<'de> for BinNoteVisitor {
         A: de::SeqAccess<'de>,
     {
         use de::Error;
-        let length: Option<u16> = seq.next_element()?;
+        let length: Option<u32> = seq.next_element()?;
         let length = length.ok_or_else(|| A::Error::invalid_length(0, &self))?;
         let pitch: Option<u8> = seq.next_element()?;
         let pitch = pitch.ok_or_else(|| A::Error::invalid_length(1, &self))?;
