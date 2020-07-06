@@ -240,7 +240,7 @@ impl NoteName {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub struct NoSuchNoteName;
 
 impl std::str::FromStr for NoteName {

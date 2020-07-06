@@ -1,3 +1,4 @@
+use crate::note::NoSuchNoteName;
 use std::fmt;
 use std::num::ParseIntError;
 
@@ -5,6 +6,7 @@ use std::num::ParseIntError;
 pub enum Error {
     InvalidMusicXML(&'static str),
     BadNumber(ParseIntError),
+    NoSuchNoteName,
 }
 
 impl fmt::Display for Error {
@@ -18,5 +20,11 @@ impl std::error::Error for Error {}
 impl From<ParseIntError> for Error {
     fn from(error: ParseIntError) -> Self {
         Error::BadNumber(error)
+    }
+}
+
+impl From<NoSuchNoteName> for Error {
+    fn from(error: NoSuchNoteName) -> Self {
+        Error::NoSuchNoteName
     }
 }

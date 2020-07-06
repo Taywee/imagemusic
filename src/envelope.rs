@@ -1,8 +1,8 @@
 use serde::de::{self, Error};
 use serde::ser::{self, SerializeTuple};
 use serde::{Deserialize, Serialize};
-use std::fmt;
 use std::cell::RefCell;
+use std::fmt;
 
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
 pub struct Point {
@@ -60,9 +60,9 @@ impl<'de> de::Deserialize<'de> for Point {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct Envelope{
+pub struct Envelope {
     pub points: Vec<Point>,
-    
+
     // Specific points for note
     note_points: RefCell<Vec<Point>>,
 }
@@ -119,7 +119,7 @@ impl<'de> de::Deserialize<'de> for Envelope {
 
 impl Default for Envelope {
     fn default() -> Self {
-        Envelope{
+        Envelope {
             points: vec![
                 Point {
                     stop: 0.0,
