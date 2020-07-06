@@ -14,8 +14,8 @@ pub mod voice;
 
 pub use crate::song::Song;
 
-use song::SongIterator;
-use std::ffi::c_void;
+
+
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]

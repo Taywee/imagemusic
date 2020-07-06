@@ -328,7 +328,7 @@ pub fn from_musicxml(root: Element) -> Result<crate::Song, Error> {
         .parse()?;
 
     let divisions_per_measure = divisions * 4 * beats / beat_type;
-    let divisions_per_second = (divisions * tempo) as f64 / 60.0;
+    let _divisions_per_second = (divisions * tempo) as f64 / 60.0;
 
     // id -> name
     let mut part_names: HashMap<String, String> = HashMap::new();

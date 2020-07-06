@@ -24,7 +24,7 @@ impl From<ParseIntError> for Error {
 }
 
 impl From<NoSuchNoteName> for Error {
-    fn from(error: NoSuchNoteName) -> Self {
+    fn from(_error: NoSuchNoteName) -> Self {
         Error::NoSuchNoteName
     }
 }
