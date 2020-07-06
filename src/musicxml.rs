@@ -352,8 +352,6 @@ pub fn from_musicxml(root: Element) -> Result<crate::Song, Error> {
 
     let mut note_offset = 0;
 
-
-
     for voice in voices {
         // chords in voice split into individual tracks
         let mut chord_voices: Vec<Vec<Note>> = Vec::new();
@@ -386,14 +384,16 @@ pub fn from_musicxml(root: Element) -> Result<crate::Song, Error> {
                         }
                         None => {
                             return Err(Error::InvalidMusicXML(
-                                    "tie stop has no tie start to continue from",
+                                "tie stop has no tie start to continue from",
                             ))
                         }
                     }
                 } else {
-                    match awaiting_voices.iter_mut().enumerate().find(|(_, track)| {
-                        !track.last().unwrap().tie_start
-                    }) {
+                    match awaiting_voices
+                        .iter_mut()
+                        .enumerate()
+                        .find(|(_, track)| !track.last().unwrap().tie_start)
+                    {
                         Some((index, track)) => {
                             track.push(*note);
                             // This voice is not awaiting a new note for this chord anymore
