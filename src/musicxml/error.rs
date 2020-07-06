@@ -7,6 +7,7 @@ pub enum Error {
     InvalidMusicXML(&'static str),
     BadNumber(ParseIntError),
     NoSuchNoteName,
+    GraceNote
 }
 
 impl fmt::Display for Error {

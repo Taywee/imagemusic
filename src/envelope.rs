@@ -46,7 +46,7 @@ impl<'de> de::Visitor<'de> for PointVisitor {
         let amplitude = amplitude.ok_or_else(|| A::Error::invalid_length(1, &self))?;
         let stop = stop as f32 / 100.0;
         let amplitude = amplitude as f32 / 255.0;
-        Ok(dbg!(Point { stop, amplitude }))
+        Ok(Point { stop, amplitude })
     }
 }
 

@@ -51,6 +51,12 @@ impl TryFrom<&Element> for Note {
     type Error = Error;
 
     fn try_from(element: &Element) -> Result<Self, Self::Error> {
+        if let Some(_) = element
+            .children()
+            .find(|e| e.name() == "grace") {
+                return Err(Error::GraceNote);
+        }
+
         let duration = element
             .children()
             .find(|e| e.name() == "duration")
@@ -149,7 +155,10 @@ impl TryFrom<&Element> for Measure {
         let mut notes = HashMap::new();
 
         for note in element.children().filter(|e| e.name() == "note") {
-            let note: Note = note.try_into()?;
+            let note: Note = match note.try_into() {
+                Err(Error::GraceNote) => continue,
+                e => e?,
+            };
             let voice = notes.entry(note.voice).or_insert(Vec::new());
             if !note.chord {
                 // new chord
@@ -291,10 +300,7 @@ pub fn from_musicxml(root: Element) -> Result<crate::Song, Error> {
         .ok_or(Error::InvalidMusicXML("Could not find the attributes"))?;
     let direction = first_measure
         .children()
-        .find(|e| e.name() == "direction")
-        .ok_or(Error::InvalidMusicXML(
-            "Could not find the direction element",
-        ))?;
+        .find(|e| e.name() == "direction");
 
     // Divisions of quarter notes.
     let divisions: usize = attributes
@@ -330,12 +336,13 @@ pub fn from_musicxml(root: Element) -> Result<crate::Song, Error> {
         .parse()?;
 
     let tempo: usize = direction
-        .children()
-        .find(|e| e.name() == "sound")
-        .ok_or(Error::InvalidMusicXML("Could not find the sound element"))?
-        .attr("tempo")
-        .ok_or(Error::InvalidMusicXML("Could not find the tempo attribute"))?
-        .parse()?;
+        .and_then(|direction|
+            direction.children()
+            .find(|e| e.name() == "sound")
+            .and_then(|sound|
+                sound.attr("tempo")
+            )
+        ).unwrap_or("100").parse()?;
 
     let divisions_per_measure = divisions * 4 * beats / beat_type;
     let divisions_per_second = (divisions * tempo) as f32 / 60.0;
