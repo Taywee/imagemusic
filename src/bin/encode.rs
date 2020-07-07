@@ -19,9 +19,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let bincode = bincode::serialize(&song)?;
     let mut compressed = Vec::new();
     {
-        let mut compressor = brotli::CompressorReader::new(bincode.as_slice(), 4096, 11, 21);
+        let mut compressor = flate2::read::GzEncoder::new(bincode.as_slice(), flate2::Compression::best());
         compressor.read_to_end(&mut compressed)?;
     }
+    dbg!(compressed.len());
 
     let payload = Payload::new(&compressed);
 

@@ -15,6 +15,9 @@ pub mod voice;
 pub use crate::song::Song;
 
 use wasm_bindgen::prelude::*;
+use wasm_bindgen::Clamped;
+use crate::image::{Pixel, Image, Payload};
+use std::io::Read;
 
 #[wasm_bindgen]
 extern "C" {
@@ -51,7 +54,7 @@ pub fn song_free(song: *mut Song) {
     }
 }
 
-// Get all samples from a song
+/// Get all samples from a song
 #[wasm_bindgen]
 pub fn song_samples(song: *mut Song, sample_rate: u32) -> Vec<f32> {
     let song = unsafe { &mut *song };
@@ -59,4 +62,44 @@ pub fn song_samples(song: *mut Song, sample_rate: u32) -> Vec<f32> {
     let mut samples = Vec::with_capacity(60 * sample_rate as usize);
     samples.extend(song.samples(sample_rate as usize));
     samples
+}
+
+/// Bake a song into an image.
+///
+/// Dimensions aren't returned because they are the same as the input ones, so the caller already
+/// has them.
+#[wasm_bindgen]
+pub fn song_bake_image(song: *mut Song, image_width: u32, image_height: u32, image_data: Clamped<Vec<u8>>) -> Result<Vec<u8>, JsValue> {
+    let song = unsafe { &mut *song };
+
+    let bincode: Result<_, JsValue> = bincode::serialize(&song).map_err(|e| format!("{}", e).into());
+    let bincode = bincode?;
+    let mut compressed = Vec::new();
+    {
+        let mut compressor = flate2::read::GzEncoder::new(bincode.as_slice(), flate2::Compression::best());
+        let result: Result<_, JsValue> = compressor.read_to_end(&mut compressed).map_err(|e| format!("{}", e).into());
+        result?;
+    }
+
+    let payload = Payload::new(&compressed);
+
+    let image_data: Vec<Pixel> = image_data.chunks_exact(4).map(|chunk| Pixel {
+        r: chunk[0],
+        g: chunk[1],
+        b: chunk[2],
+        a: chunk[3],
+    }).collect();
+
+    let mut image = Image::new(
+        (image_width, image_height),
+        image_data,
+    );
+
+    image.bake_payload(&payload);
+
+    let image_data: Vec<u8> = image.pixels().iter().flat_map(|pixel|
+        vec![pixel.r, pixel.g, pixel.b, pixel.a]
+    ).collect();
+
+    Ok(image_data)
 }

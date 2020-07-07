@@ -19,7 +19,7 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 regex = '1'
 toml = '0.5'
-brotli = '3'
+flate2 = '1'
 base64 = '0.12'
 bincode = '1'
 js-sys = '^0.3'
