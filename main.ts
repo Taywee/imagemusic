@@ -75,7 +75,7 @@ async function run() {
     const musicImage = <HTMLImageElement>document.getElementById("music-image")!;
     musicImage.crossOrigin = 'Anonymous';
 
-    async function bakeImage() {
+    bake.addEventListener("click", async () => {
         const song = song_from_toml(input_song.value);
         try {
             const input_image_data = await image_to_data(inputImage);
@@ -85,16 +85,15 @@ async function run() {
         } finally {
             song_free(song);
         }
-    }
-
-    bake.addEventListener("click", bakeImage);
+    });
 
     const audioCtx = new window.AudioContext();
     let source: AudioBufferSourceNode | null = null;
 
     const play = <HTMLButtonElement>document.getElementById("play")!;
 
-    async function playMusicImage() {
+
+    play.addEventListener("click", async () => {
         try {
             // First disable onload so that we don't play this again the next
             // time an image is baked.  Baking shouldn't autoplay, but loading
@@ -154,9 +153,7 @@ async function run() {
         catch (e) {
             alert(`error: ${e}`);
         }
-    }
-
-    play.addEventListener("click", playMusicImage);
+    });
 
     const stop = <HTMLButtonElement>document.getElementById("stop")!;
 
@@ -204,13 +201,30 @@ async function run() {
             let files = event.dataTransfer?.files;
             console.log(event);
             if (files !== undefined && files!.length > 0) {
-                let url = URL.createObjectURL(files[0]);
+                const url = URL.createObjectURL(files[0]);
                 console.log('url ' + url);
                 musicImage.src = url;
             } else {
-                let imageUrl = event.dataTransfer?.getData("Text")
-                console.log('imageUrl: ' + imageUrl);
-                musicImage.src = imageUrl!;
+                const imageUrl = event.dataTransfer?.getData("text/uri-list");
+                console.log('fetching ' + imageUrl);
+                const request = new Request(imageUrl!, {
+                    mode: 'cors',
+                });
+                fetch(request)
+                .then(async response => {
+                    try {
+                        const blob = await response.blob();
+                        console.log(blob);
+                        const url = URL.createObjectURL(blob);
+                        musicImage.src = url;
+                    }
+                    catch (e) {
+                        alert(e);
+                    }
+                })
+                .catch(e => {
+                    alert(e + "\nTry downloading the image and uploading it manually.");
+                });
             }
         }
         catch (e) {
@@ -229,13 +243,30 @@ async function run() {
             let files = event.dataTransfer?.files;
             console.log(event);
             if (files !== undefined && files!.length > 0) {
-                let url = URL.createObjectURL(files[0]);
+                const url = URL.createObjectURL(files[0]);
                 console.log('url ' + url);
                 inputImage.src = url;
             } else {
-                let imageUrl = event.dataTransfer?.getData("Text")
-                console.log('imageUrl: ' + imageUrl);
-                inputImage.src = imageUrl!;
+                const imageUrl = event.dataTransfer?.getData("text/uri-list");
+                console.log('fetching ' + imageUrl);
+                const request = new Request(imageUrl!, {
+                    mode: 'cors',
+                });
+                fetch(request)
+                .then(async response => {
+                    try {
+                        const blob = await response.blob();
+                        console.log(blob);
+                        const url = URL.createObjectURL(blob);
+                        inputImage.src = url;
+                    }
+                    catch (e) {
+                        alert(e);
+                    }
+                })
+                .catch(e => {
+                    alert(e + "\nTry downloading the image and uploading it manually.");
+                });
             }
         }
         catch (e) {
@@ -245,7 +276,8 @@ async function run() {
 
     const extract = <HTMLButtonElement>document.getElementById("extract")!;
 
-    async function extractMusicImage() {
+
+    extract.addEventListener("click", async () => {
         try {
             const music_image_data = await image_to_data(musicImage);
             const song = song_from_image(musicImage.naturalWidth, musicImage.naturalHeight, music_image_data);
@@ -258,9 +290,7 @@ async function run() {
         catch (e) {
             alert(e)
         }
-    }
-
-    extract.addEventListener("click", extractMusicImage);
+    });
 
     const import_musicxml = <HTMLButtonElement>document.getElementById("import-musicxml")!;
 
@@ -304,10 +334,6 @@ async function run() {
         } catch (e) {
             alert(e);
         }
-    });
-
-    document.addEventListener('paste', event => {
-        console.log(event);
     });
 }
 
