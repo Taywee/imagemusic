@@ -19,7 +19,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let bincode = bincode::serialize(&song)?;
     let mut compressed = Vec::new();
     {
-        let mut compressor = flate2::read::GzEncoder::new(bincode.as_slice(), flate2::Compression::best());
+        let mut compressor =
+            flate2::read::GzEncoder::new(bincode.as_slice(), flate2::Compression::best());
         compressor.read_to_end(&mut compressed)?;
     }
     dbg!(compressed.len());

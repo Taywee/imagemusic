@@ -14,13 +14,13 @@ pub mod voice;
 
 pub use crate::song::Song;
 
+use crate::image::{Image, Payload, Pixel};
+use flate2::read::GzDecoder;
+use flate2::read::GzEncoder;
+use minidom::Element;
+use std::io::Read;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::Clamped;
-use crate::image::{Pixel, Image, Payload};
-use std::io::Read;
-use flate2::read::GzEncoder;
-use flate2::read::GzDecoder;
-use minidom::Element;
 
 #[wasm_bindgen]
 extern "C" {
@@ -52,7 +52,9 @@ pub fn song_from_toml(toml: &str) -> Result<*mut Song, JsValue> {
 /// Read a toml string into a song
 #[wasm_bindgen]
 pub fn song_from_musicxml(xml: &str) -> Result<*mut Song, JsValue> {
-    let root = xml.parse::<Element>().map_err(|e| JsValue::from(e.to_string()))?;
+    let root = xml
+        .parse::<Element>()
+        .map_err(|e| JsValue::from(e.to_string()))?;
     let song = musicxml::from_musicxml(root).map_err(|e| JsValue::from(e.to_string()))?;
 
     Ok(Box::into_raw(Box::new(song)))
@@ -80,35 +82,39 @@ pub fn song_samples(song: *mut Song, sample_rate: u32) -> Vec<f32> {
 pub fn song_to_toml(song: *mut Song) -> Result<String, JsValue> {
     let song = unsafe { &mut *song };
     // Just allocate enough for a minute
-    toml::to_string(&song)
-        .map_err(|e| JsValue::from(e.to_string()))
+    toml::to_string(&song).map_err(|e| JsValue::from(e.to_string()))
 }
 
 /// Read a toml string into a song
 #[wasm_bindgen]
-pub fn song_from_image(image_width: u32, image_height: u32, image_data: Clamped<Vec<u8>>) -> Result<*mut Song, JsValue> {
-    let image_data: Vec<Pixel> = image_data.chunks_exact(4).map(|chunk| Pixel {
-        r: chunk[0],
-        g: chunk[1],
-        b: chunk[2],
-        a: chunk[3],
-    }).collect();
+pub fn song_from_image(
+    image_width: u32,
+    image_height: u32,
+    image_data: Clamped<Vec<u8>>,
+) -> Result<*mut Song, JsValue> {
+    let image_data: Vec<Pixel> = image_data
+        .chunks_exact(4)
+        .map(|chunk| Pixel {
+            r: chunk[0],
+            g: chunk[1],
+            b: chunk[2],
+            a: chunk[3],
+        })
+        .collect();
 
-    let image = Image::new(
-        (image_width, image_height),
-        image_data,
-    );
+    let image = Image::new((image_width, image_height), image_data);
 
-    let payload = image.read_payload()
+    let payload = image
+        .read_payload()
         .map_err(|e| JsValue::from(e.to_string()))?;
-    let payload = payload.data()
-        .map_err(|e| JsValue::from(e.to_string()))?;
+    let payload = payload.data().map_err(|e| JsValue::from(e.to_string()))?;
 
     let mut decoder = GzDecoder::new(&payload[..]);
     let mut buffer = Vec::new();
-    decoder.read_to_end(&mut buffer)
+    decoder
+        .read_to_end(&mut buffer)
         .map_err(|e| JsValue::from(e.to_string()))?;
-    
+
     let song = bincode::deserialize(&buffer).map_err(|e| JsValue::from(e.to_string()))?;
     Ok(Box::into_raw(Box::new(song)))
 }
@@ -118,35 +124,44 @@ pub fn song_from_image(image_width: u32, image_height: u32, image_data: Clamped<
 /// Dimensions aren't returned because they are the same as the input ones, so the caller already
 /// has them.
 #[wasm_bindgen]
-pub fn song_bake_image(song: *mut Song, image_width: u32, image_height: u32, image_data: Clamped<Vec<u8>>) -> Result<Vec<u8>, JsValue> {
+pub fn song_bake_image(
+    song: *mut Song,
+    image_width: u32,
+    image_height: u32,
+    image_data: Clamped<Vec<u8>>,
+) -> Result<Vec<u8>, JsValue> {
     let song = unsafe { &mut *song };
 
     let bincode = bincode::serialize(&song).map_err(|e| JsValue::from(e.to_string()))?;
     let mut compressed = Vec::new();
     {
         let mut compressor = GzEncoder::new(bincode.as_slice(), flate2::Compression::best());
-        compressor.read_to_end(&mut compressed).map_err(|e| JsValue::from(e.to_string()))?;
+        compressor
+            .read_to_end(&mut compressed)
+            .map_err(|e| JsValue::from(e.to_string()))?;
     }
 
     let payload = Payload::new(&compressed);
 
-    let image_data: Vec<Pixel> = image_data.chunks_exact(4).map(|chunk| Pixel {
-        r: chunk[0],
-        g: chunk[1],
-        b: chunk[2],
-        a: chunk[3],
-    }).collect();
+    let image_data: Vec<Pixel> = image_data
+        .chunks_exact(4)
+        .map(|chunk| Pixel {
+            r: chunk[0],
+            g: chunk[1],
+            b: chunk[2],
+            a: chunk[3],
+        })
+        .collect();
 
-    let mut image = Image::new(
-        (image_width, image_height),
-        image_data,
-    );
+    let mut image = Image::new((image_width, image_height), image_data);
 
     image.bake_payload(&payload);
 
-    let image_data: Vec<u8> = image.pixels().iter().flat_map(|pixel|
-        vec![pixel.r, pixel.g, pixel.b, pixel.a]
-    ).collect();
+    let image_data: Vec<u8> = image
+        .pixels()
+        .iter()
+        .flat_map(|pixel| vec![pixel.r, pixel.g, pixel.b, pixel.a])
+        .collect();
 
     Ok(image_data)
 }

@@ -516,10 +516,7 @@ impl Image {
             }
         }
 
-        Ok(Payload::from_raw(
-            grid_size as u8,
-            superpixels,
-        )?)
+        Ok(Payload::from_raw(grid_size as u8, superpixels)?)
     }
 }
 

@@ -1,7 +1,7 @@
+use flate2::read::GzDecoder;
 use imagemusic::Song;
 use std::env;
 use std::io::Read;
-use flate2::read::GzDecoder;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().skip(1).collect();

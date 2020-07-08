@@ -3,8 +3,10 @@ use imagemusic::Song;
 
 pub fn criterion_benchmark(c: &mut Criterion) {
     let song: Song = toml::from_str(include_str!("minuet.toml")).unwrap();
-    let song_twopoint_envelope: Song = toml::from_str(include_str!("minuet-twopoint-envelope.toml")).unwrap();
-    let song_simple_envelope: Song = toml::from_str(include_str!("minuet-simple-envelope.toml")).unwrap();
+    let song_twopoint_envelope: Song =
+        toml::from_str(include_str!("minuet-twopoint-envelope.toml")).unwrap();
+    let song_simple_envelope: Song =
+        toml::from_str(include_str!("minuet-simple-envelope.toml")).unwrap();
 
     let mut group = c.benchmark_group("render minuet");
 
