@@ -9,18 +9,28 @@
     <link href="main.css" rel="stylesheet">
   </head>
   <body>
-    <label for="output-image">Music Image: </label>
-    <img src="art/blank.png" id="output-image">
-    <br>
-    <br>
     <button type="button" id="play">Play Music Image</button>
+    <button type="button" id="stop">Stop Playing Music</button>
+    <br>
+    <label for="load-music-image">Load Music Image...</label>
+    <input type="file" id="load-music-image"></input>
+    <br>
+    <label for="music-image">Music Image: </label>
+    <img src="art/blank.png" id="music-image">
+    <br>
+    <br>
     <button type="button" id="extract">Extract Song From Image</button>
     <hr>
     <button type="button" id="bake">Bake Song Into Image</button>
-    <button type="button" id="import-musicxml">Import MusicXML as Song</button>
+    <br>
+    <label for="import-musicxml">Load MusicXML...</label>
+    <input type="file" id="import-musicxml"></input>
     <br>
     <label for="input-song">Song TOML: </label>
     <textarea id="input-song"></textarea>
+    <br>
+    <label for="load-input-image">Load Input Image...</label>
+    <input type="file" id="load-input-image"></input>
     <br>
     <label for="input-image">Input image: </label>
     <img src="art/blank.png" id="input-image">
@@ -28,7 +38,8 @@
     <label for="sample-song">Sample Song: </label>
     <select id="sample-song">
       <option value="" disabled selected>Select a sample song...</option>
-      <option value="songs/moonlight-sonata-movement-3.toml">Moonlight Sonata (Movement III)</option>
+      <option value="songs/moonlight-sonata-movement-3.toml">Beethoven's Moonlight Sonata (Movement III)</option>
+      <option value="songs/little-fugue.toml">Bach's Little Fugue in G Minor</option>
     </select>
     <br>
     <label for="sample-image">Sample Image: </label>

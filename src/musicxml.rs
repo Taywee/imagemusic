@@ -455,7 +455,7 @@ pub fn from_musicxml(root: Element) -> Result<crate::Song, Error> {
             .into_iter()
             .map(|notes| crate::voice::Voice {
                 volume: u8::MAX,
-                instrument: crate::instrument::Instrument::Sawtooth,
+                instrument: Default::default(),
                 notes: crate::note::Notes(notes.into_iter().map(Note::into).collect()),
                 envelope: Default::default(),
             })

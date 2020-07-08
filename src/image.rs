@@ -481,14 +481,12 @@ impl Image {
         let horizontal_superpixels = self.dimensions.0 / superpixel_width;
         let vertical_superpixels = self.dimensions.1 / superpixel_height;
 
-        if horizontal_superpixels != vertical_superpixels {
-            return Err(Error::SuperpixelGridNotSquare);
-        }
+        let grid_size = horizontal_superpixels.min(vertical_superpixels);
 
         let mut superpixels = Vec::new();
 
-        for y in 0..vertical_superpixels {
-            for x in 0..horizontal_superpixels {
+        for y in 0..grid_size {
+            for x in 0..grid_size {
                 // All the pixels in this superpixel
                 let mut pixels = Vec::new();
                 for sub_y in 0..superpixel_height {
@@ -519,7 +517,7 @@ impl Image {
         }
 
         Ok(Payload::from_raw(
-            horizontal_superpixels as u8,
+            grid_size as u8,
             superpixels,
         )?)
     }
