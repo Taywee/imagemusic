@@ -181,7 +181,6 @@ async function run() {
                 // Load all the files into data
                 let url = URL.createObjectURL(files[0]);
                 console.log('url ' + url);
-                musicImage.onload = playMusicImage;
                 musicImage.src = url;
             }
         } catch (e) {
@@ -207,15 +206,12 @@ async function run() {
             if (files !== undefined && files!.length > 0) {
                 let url = URL.createObjectURL(files[0]);
                 console.log('url ' + url);
-                musicImage.onload = playMusicImage;
                 musicImage.src = url;
             } else {
                 let imageUrl = event.dataTransfer?.getData("Text")
                 console.log('imageUrl: ' + imageUrl);
-                musicImage.onload = playMusicImage;
                 musicImage.src = imageUrl!;
             }
-            playMusicImage();
         }
         catch (e) {
             alert(e);
@@ -308,6 +304,10 @@ async function run() {
         } catch (e) {
             alert(e);
         }
+    });
+
+    document.addEventListener('paste', event => {
+        console.log(event);
     });
 }
 
