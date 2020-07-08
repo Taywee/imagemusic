@@ -8,7 +8,19 @@ import init, {
     song_from_musicxml,
 } from './pkg/imagemusic.js';
 
-function image_to_data(image: HTMLImageElement): Uint8ClampedArray {
+async function sleep(ms: number): Promise<any> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function image_to_data(image: HTMLImageElement): Promise<Uint8ClampedArray> {
+    let i = 0;
+    while (!image.complete) {
+        console.log("waiting");
+        await sleep(10);
+        if (++i > 100) {
+            break;
+        }
+    }
     const canvas = <HTMLCanvasElement>document.createElement("canvas");
     canvas.width = image.naturalWidth;
     canvas.height = image.naturalHeight;
@@ -63,26 +75,32 @@ async function run() {
     const musicImage = <HTMLImageElement>document.getElementById("music-image")!;
     musicImage.crossOrigin = 'Anonymous';
 
-    bake.addEventListener("click", _ => {
+    async function bakeImage() {
         const song = song_from_toml(input_song.value);
         try {
-            const input_image_data = image_to_data(inputImage);
+            const input_image_data = await image_to_data(inputImage);
             const music_image_data = song_bake_image(song, inputImage.naturalWidth, inputImage.naturalHeight, input_image_data);
             const data_url = data_to_url(inputImage.naturalWidth, inputImage.naturalHeight, music_image_data);
             musicImage.src = data_url;
         } finally {
             song_free(song);
         }
-    });
+    }
+
+    bake.addEventListener("click", bakeImage);
 
     const audioCtx = new window.AudioContext();
     let source: AudioBufferSourceNode | null = null;
 
     const play = <HTMLButtonElement>document.getElementById("play")!;
 
-    play.addEventListener("click", _ => {
+    async function playMusicImage() {
         try {
-            const music_image_data = image_to_data(musicImage);
+            // First disable onload so that we don't play this again the next
+            // time an image is baked.  Baking shouldn't autoplay, but loading
+            // and drag-n-drop should.
+            musicImage.onload = null;
+            const music_image_data = await image_to_data(musicImage);
             const song = song_from_image(musicImage.naturalWidth, musicImage.naturalHeight, music_image_data);
             try {
                 let max_amplitude: number = 0.0;
@@ -136,7 +154,9 @@ async function run() {
         catch (e) {
             alert(`error: ${e}`);
         }
-    });
+    }
+
+    play.addEventListener("click", playMusicImage);
 
     const stop = <HTMLButtonElement>document.getElementById("stop")!;
 
@@ -161,6 +181,7 @@ async function run() {
                 // Load all the files into data
                 let url = URL.createObjectURL(files[0]);
                 console.log('url ' + url);
+                musicImage.onload = playMusicImage;
                 musicImage.src = url;
             }
         } catch (e) {
@@ -181,8 +202,20 @@ async function run() {
         event.stopPropagation();
         event.preventDefault();
         try {
-            let imageUrl = event.dataTransfer?.getData("Text")
-            musicImage.src = imageUrl!;
+            let files = event.dataTransfer?.files;
+            console.log(event);
+            if (files !== undefined && files!.length > 0) {
+                let url = URL.createObjectURL(files[0]);
+                console.log('url ' + url);
+                musicImage.onload = playMusicImage;
+                musicImage.src = url;
+            } else {
+                let imageUrl = event.dataTransfer?.getData("Text")
+                console.log('imageUrl: ' + imageUrl);
+                musicImage.onload = playMusicImage;
+                musicImage.src = imageUrl!;
+            }
+            playMusicImage();
         }
         catch (e) {
             alert(e);
@@ -197,8 +230,17 @@ async function run() {
         event.stopPropagation();
         event.preventDefault();
         try {
-            let imageUrl = event.dataTransfer?.getData("Text")
-            inputImage.src = imageUrl!;
+            let files = event.dataTransfer?.files;
+            console.log(event);
+            if (files !== undefined && files!.length > 0) {
+                let url = URL.createObjectURL(files[0]);
+                console.log('url ' + url);
+                inputImage.src = url;
+            } else {
+                let imageUrl = event.dataTransfer?.getData("Text")
+                console.log('imageUrl: ' + imageUrl);
+                inputImage.src = imageUrl!;
+            }
         }
         catch (e) {
             alert(e);
@@ -207,9 +249,9 @@ async function run() {
 
     const extract = <HTMLButtonElement>document.getElementById("extract")!;
 
-    extract.addEventListener("click", _ => {
+    async function extractMusicImage() {
         try {
-            const music_image_data = image_to_data(musicImage);
+            const music_image_data = await image_to_data(musicImage);
             const song = song_from_image(musicImage.naturalWidth, musicImage.naturalHeight, music_image_data);
             try {
                 input_song.value = song_to_toml(song);
@@ -220,7 +262,9 @@ async function run() {
         catch (e) {
             alert(e)
         }
-    });
+    }
+
+    extract.addEventListener("click", extractMusicImage);
 
     const import_musicxml = <HTMLButtonElement>document.getElementById("import-musicxml")!;
 
