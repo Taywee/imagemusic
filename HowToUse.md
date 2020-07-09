@@ -1,23 +1,35 @@
 # How do I use this?
 
+Note that this does not work in all browsers.  I couldn't get it working on
+Chrome on an iPhone or on Safari on a Mac, but that's no huge surprise.
+
+## Quickstart
+
+* Scroll to the very bottom of the main page
+* choose a sample image (I recommend Beethoven's Moonlight Sonata (Movement III))
+  * You should see the song field fill with some TOML
+* Choose a sample image (I recommend Starry Night)
+  * The image will fill the bottom image field
+* Click "Bake Song Into Image" and wait for the image to appear at the top
+  * The top image will have a target on the top left corner, indicating that it
+    is a music image
+* Click "Play Music Image" and wait a few seconds.  You should start hearing
+  music in a bit.
+
 ## How do I play a music image I have found?
 
 Sometimes you can drag and drop a music image directly into the top image field,
 but this won't always work.  Imgur, for instance, allows this, but many sites do
 not.  This is something I can't work around, as it's the source site that allows
-or denies this.
+or denies this. (The problem is
+[CORS](https://en.wikipedia.org/wiki/Cross-origin_resource_sharing), if you're
+curious)
 
 If you can't drag and drop, you'll have to download the image, and then click
 "Load Music Image..." to load the image from your device.  Then you can click
 "Play Music Image", wait a few seconds, and start hearing the music.
 
 ## How do I make a music image?
-
-To get quickly started, scroll to the very bottom, choose a sample image and
-sample song (I recommend Starry Night and Beethoven's Moonlight Sonata (Movement
-III)), click the "Bake Song Into Image" button, wait for the image to appear at
-the top, and then click "Play Music Image".  It'll chug for a few seconds, and
-then start playing the music from the image.
 
 You can make your own by getting your own image and loading it with "Load Input
 Image..." or dragging and dropping it over the bottom image (the same caveats
@@ -30,8 +42,14 @@ midis.  You can find midis by going to
 [VGMusic](https://vgmusic.com/). If you find a site that lets you either get
 musicxml or midi, you should (counter-intuitively) probably go for the midi,
 because it's a simpler format and musicxml is more likely to have constructs
-that imagemusic won't convert well, like grace notes.  Also make sure to remove
-all percussion, as that isn't yet supported.
+that imagemusic won't convert well, like grace notes.  Also **make sure to
+remove all percussion tracsk, as that isn't yet supported.  Keeping percussion
+tracks in the mix will likely cause errors.**
+
+The musicxml converter is also still pretty fresh and likely still quite buggy.
+If you can find a small musicxml file that produces bad behavior with the
+converter, you can submit it as a bug report on the issue tracker (see the
+bottom of this page).
 
 When your music is converted, you can review the TOML and maybe change some
 instruments and stuff.  The conversion is very simple and will not try to take
@@ -89,4 +107,5 @@ Please report it!  This repository has its home on
 [GitLab](https://gitlab.com/Taywee/imagemusic), which is the preferred place to
 report issues, but it is cloned on
 [GitHub](https://github.com/Taywee/imagemusic) and issues are being watched as
-well.
+well.  If you can provide files to replicate it, that would greatly help.  The
+smaller you can get these files, the better.

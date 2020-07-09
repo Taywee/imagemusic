@@ -68,7 +68,8 @@ async function run() {
     sample_song.addEventListener("input", event => {
         let target = <HTMLInputElement>event.target;
         fetch(target.value)
-        .then(response => response.text().then(text => input_song.value = text));
+        .then(response => response.text().then(text => input_song.value = text).catch(alert))
+            .catch(alert);
     });
 
     const bake = <HTMLButtonElement>document.getElementById("bake")!;
@@ -76,14 +77,23 @@ async function run() {
     musicImage.crossOrigin = 'Anonymous';
 
     bake.addEventListener("click", async () => {
-        const song = song_from_toml(input_song.value);
         try {
-            const input_image_data = await image_to_data(inputImage);
-            const music_image_data = song_bake_image(song, inputImage.naturalWidth, inputImage.naturalHeight, input_image_data);
-            const data_url = data_to_url(inputImage.naturalWidth, inputImage.naturalHeight, music_image_data);
-            musicImage.src = data_url;
-        } finally {
-            song_free(song);
+            bake.innerText = 'Baking Song Into Image...';
+            const song = song_from_toml(input_song.value);
+            try {
+                const input_image_data = await image_to_data(inputImage);
+                const music_image_data = song_bake_image(song, inputImage.naturalWidth, inputImage.naturalHeight, input_image_data);
+                const data_url = data_to_url(inputImage.naturalWidth, inputImage.naturalHeight, music_image_data);
+                musicImage.src = data_url;
+            } finally {
+                song_free(song);
+            }
+        }
+        catch (e) {
+            alert(e);
+        }
+        finally {
+            bake.innerText = 'Bake Song Into Image';
         }
     });
 
@@ -95,6 +105,8 @@ async function run() {
 
     play.addEventListener("click", async () => {
         try {
+            play.innerText = 'Processing Music Image...';
+
             // First disable onload so that we don't play this again the next
             // time an image is baked.  Baking shouldn't autoplay, but loading
             // and drag-n-drop should.
@@ -152,6 +164,9 @@ async function run() {
         }
         catch (e) {
             alert(`error: ${e}`);
+        }
+        finally {
+            play.innerText = 'Play Music Image';
         }
     });
 

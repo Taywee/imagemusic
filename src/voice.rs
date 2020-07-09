@@ -77,6 +77,7 @@ impl<'a> Iterator for VoiceIterator<'a> {
 
             match self.note_iterator.next() {
                 Some(note) => {
+                    self.ramp = 0.0;
                     self.envelope
                         .prepare_note(self.seconds_per_beat * note.length as f32);
                     self.note_samples =
@@ -106,8 +107,6 @@ impl<'a> Iterator for VoiceIterator<'a> {
                 * self
                     .envelope
                     .amplitude_at_time(self.note_current_sample as f32 * self.inverse_sample_rate);
-        } else {
-            self.ramp = 0.0;
         }
 
         Some(sample)
