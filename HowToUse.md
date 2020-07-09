@@ -24,9 +24,17 @@ source site that allows or denies this. (The problem is
 [CORS](https://en.wikipedia.org/wiki/Cross-origin_resource_sharing), if you're
 curious)
 
-If you can't drag and drop, you'll have to download the image, and then click
-"Load Music Image..." to load the image from your device.  Then you can click
-"Play Music Image", wait a few seconds, and start hearing the music.
+If you can't drag and drop, you'll have to:
+
+* Download the image
+* Click "Load Music Image..." to load the image from your device.
+* Click "Play Music Image"
+* Wait a few seconds
+* Start hearing the music.
+
+Some OSes will let you streamline this, such as letting you drag the image onto
+your desktop, and then drag that file into the image field, or copy the image
+and paste it into the file dialog.
 
 Aside: If you know a way to work around it, please go to the repository and ping
 me in the issues.  I would absolutely love to have drag-and-drop functionality.
@@ -46,7 +54,14 @@ musicxml or midi, you should (counter-intuitively) probably go for the midi,
 because it's a simpler format and musicxml is more likely to have constructs
 that imagemusic won't convert well, like grace notes.  Also **make sure to
 remove all percussion tracsk, as that isn't yet supported.  Keeping percussion
-tracks in the mix will likely cause errors.**
+tracks in the mix will likely cause errors.**  To summarize:
+
+* Get Musescore
+* Open a midi file in musescore
+* Go to "Edit" -> "Instruments" and remove all drums and percussion tracks, as
+  well as anything unnecessary like echo tracks
+* Go to "File" -> "Export" and export it as an "Uncompressed MusicXML" file
+* On imagemusic, do "Load MusicXML" and select your musicxml
 
 The musicxml converter is also still pretty fresh and likely still quite buggy.
 If you can find a small musicxml file that produces bad behavior with the
