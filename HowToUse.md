@@ -19,15 +19,17 @@ Chrome on an iPhone or on Safari on a Mac, but that's no huge surprise.
 ## How do I play a music image I have found?
 
 Sometimes you can drag and drop a music image directly into the top image field,
-but this won't always work.  Imgur, for instance, allows this, but many sites do
-not.  This is something I can't work around, as it's the source site that allows
-or denies this. (The problem is
+but this won't usually work.  This is something I can't work around, as it's the
+source site that allows or denies this. (The problem is
 [CORS](https://en.wikipedia.org/wiki/Cross-origin_resource_sharing), if you're
 curious)
 
 If you can't drag and drop, you'll have to download the image, and then click
 "Load Music Image..." to load the image from your device.  Then you can click
 "Play Music Image", wait a few seconds, and start hearing the music.
+
+Aside: If you know a way to work around it, please go to the repository and ping
+me in the issues.  I would absolutely love to have drag-and-drop functionality.
 
 ## How do I make a music image?
 

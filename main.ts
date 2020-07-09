@@ -222,10 +222,7 @@ async function run() {
             } else {
                 const imageUrl = event.dataTransfer?.getData("text/uri-list");
                 console.log('fetching ' + imageUrl);
-                const request = new Request(imageUrl!, {
-                    mode: 'cors',
-                });
-                fetch(request)
+                fetch(imageUrl!)
                 .then(async response => {
                     try {
                         const blob = await response.blob();
@@ -264,10 +261,7 @@ async function run() {
             } else {
                 const imageUrl = event.dataTransfer?.getData("text/uri-list");
                 console.log('fetching ' + imageUrl);
-                const request = new Request(imageUrl!, {
-                    mode: 'cors',
-                });
-                fetch(request)
+                fetch(imageUrl!)
                 .then(async response => {
                     try {
                         const blob = await response.blob();
